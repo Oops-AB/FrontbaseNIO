@@ -1,0 +1,6 @@
+module CFBCAccess [system] [extern_c] {
+    header "shim.h"
+    link "FBCAccess"
+    link "z"
+    export *
+}
