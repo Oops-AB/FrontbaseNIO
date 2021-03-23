@@ -124,6 +124,10 @@ internal class FrontbaseStatement {
 
             return FrontbaseRow (data: columnData)
         } else {
+            if let result = resultSet {
+                fbsCloseResult (result)
+                resultSet = nil
+            }
             return nil
         }
     }
