@@ -27,13 +27,24 @@ public enum FrontbaseData: Equatable, Encodable {
     /// `NULL`.
     case null
 
-    static private let timestampFormatter = FrontbaseData.makeTimestampFormatter()
+    static private let timestampFormatters = FrontbaseData.makeTimestampFormatters()
 
     public static var timeZone = TimeZone (abbreviation: "UTC")
 
-    private static func makeTimestampFormatter() -> DateFormatter {
+    private static func makeTimestampFormatters() -> [Int: DateFormatter] {
+        return [
+            19: makeTimestampFormatter (for: 19),
+            21: makeTimestampFormatter (for: 21),
+            22: makeTimestampFormatter (for: 22),
+            23: makeTimestampFormatter (for: 23),
+            24: makeTimestampFormatter (for: 24),
+            25: makeTimestampFormatter (for: 25),
+            26: makeTimestampFormatter (for: 26)
+        ]
+    }
+    private static func makeTimestampFormatter (for length: Int) -> DateFormatter {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSSSS"
+        formatter.dateFormat = String ("yyyy-MM-dd HH:mm:ss.SSSSSS".prefix (length))
         formatter.timeZone = timeZone
 
         return formatter
@@ -109,7 +120,7 @@ public enum FrontbaseData: Equatable, Encodable {
 
                 case FBS_Timestamp:
                     let timestampString = String (cString: fbsGetTimestamp (row, columnIndex))
-                    if let timestamp = FrontbaseData.timestampFormatter.date (from: timestampString) {
+                    if let timestamp = FrontbaseData.timestampFormatters[timestampString.count]?.date (from: timestampString) {
                         return .timestamp (timestamp)
                     } else {
                         throw FrontbaseError (reason: .error, message: "Unable to parse timestamp \(timestampString).")
@@ -213,7 +224,7 @@ public enum FrontbaseData: Equatable, Encodable {
 
                 case FBS_Timestamp:
                     let timestampString = String (cString: fbsGetAnyTypeTimestamp (row, columnIndex))
-                    if let timestamp = FrontbaseData.timestampFormatter.date (from: timestampString) {
+                    if let timestamp = FrontbaseData.timestampFormatters[timestampString.count]?.date (from: timestampString) {
                         return .timestamp (timestamp)
                     } else {
                         throw FrontbaseError (reason: .error, message: "Unable to parse timestamp \(timestampString).")
@@ -304,7 +315,7 @@ extension FrontbaseData {
             case .integer (let int): return int.description
             case .null: return "null"
             case .text (let text): return "'" + text.split (separator: "'", omittingEmptySubsequences: false).joined (separator: "''") + "'"
-            case .timestamp (let timestamp): return "TIMESTAMP '\(FrontbaseData.timestampFormatter.string (from: timestamp))'"
+            case .timestamp (let timestamp): return "TIMESTAMP '\(FrontbaseData.timestampFormatters[26]!.string (from: timestamp))'"
         }
     }
 }

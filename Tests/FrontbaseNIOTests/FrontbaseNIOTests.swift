@@ -219,11 +219,13 @@ class FrontbaseNIOTests: XCTestCase {
         let database = try FrontbaseConnection.makeFilebasedTest(); defer { database.destroyTest() }
         let timestamp = Date()
 
-        _ = try database.query ("CREATE TABLE foo (bar TIMESTAMP)").wait()
-        _ = try database.query ("INSERT INTO foo VALUES (?)", [timestamp.frontbaseData!]).wait()
+        _ = try database.query ("CREATE TABLE foo (bar TIMESTAMP, baz TIMESTAMP (0), baw TIMESTAMP (3))").wait()
+        _ = try database.query ("INSERT INTO foo VALUES (?, ?, ?)", [timestamp.frontbaseData!, timestamp.frontbaseData!, timestamp.frontbaseData!]).wait()
 
         if let result = try database.query ("SELECT * FROM foo").wait().first {
             XCTAssert (abs ((result.firstValue (forColumn: "bar")?.timestampDate?.timeIntervalSinceReferenceDate ?? Double.infinity) - timestamp.timeIntervalSinceReferenceDate) < 0.001)
+            XCTAssert (abs ((result.firstValue (forColumn: "baz")?.timestampDate?.timeIntervalSinceReferenceDate ?? Double.infinity) - timestamp.timeIntervalSinceReferenceDate) < 1)
+            XCTAssert (abs ((result.firstValue (forColumn: "baw")?.timestampDate?.timeIntervalSinceReferenceDate ?? Double.infinity) - timestamp.timeIntervalSinceReferenceDate) < 0.001)
         } else {
             XCTFail()
         }
