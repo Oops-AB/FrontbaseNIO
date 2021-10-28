@@ -145,6 +145,19 @@ public final class FrontbaseConnection {
         return promise.futureResult
     }
 
+#if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
+    @inlinable
+    public static func open (storage: Storage,
+                             sessionName: String = ProcessInfo.processInfo.processName,
+                             threadPool: NIOThreadPool,
+                             logger: Logger = .init (label: "se.oops.vapor.frontbase.connection"),
+                             on eventLoop: EventLoop
+    ) async throws -> FrontbaseConnection {
+        return try await open (storage: storage, sessionName: sessionName, threadPool: threadPool, logger: logger, on: eventLoop).get()
+    }
+#endif
+
     internal init (storage: Storage, connection: FBSConnection, threadPool: NIOThreadPool, logger: Logger, on eventLoop: EventLoop) {
         self.storage = storage
         self.databaseConnection = connection

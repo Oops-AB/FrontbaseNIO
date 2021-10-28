@@ -8,7 +8,7 @@ let package = Package(
     ],
     dependencies: [
         // 🚀 Event driven non-blocking framework.
-        .package (url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
+        .package (url: "https://github.com/apple/swift-nio.git", from: "2.28.0"),
 
         // 📜 A Logging API for Swift.
         .package (url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
