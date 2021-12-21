@@ -415,6 +415,37 @@ class FrontbaseNIOTests: XCTestCase {
         }
     }
 
+#if compiler(>=5.5) && canImport(_Concurrency)
+@available (macOS 12, iOS 15, *)
+    func testTransactionsAsync() async throws {
+        let database = try FrontbaseConnection.makeFilebasedTest(); defer { database.destroyTest() }
+        let string = "Lorem ipsum set dolor mit amet"
+
+        _ = try await database.query ("CREATE TABLE foo (\"string\" CHARACTER (100))").get()
+
+        _ = try await database.query ("INSERT INTO foo VALUES (?)", [ string.frontbaseData! ]).get()
+        _ = try await database.query ("ROLLBACK").get()
+        if let result = try await database.query ("SELECT COUNT (*) AS counter, MIN (string) AS value FROM foo").get().first {
+            XCTAssertEqual (result.firstValue (forColumn: "counter"), FrontbaseData.float (1.0))
+            XCTAssertEqual (result.firstValue (forColumn: "value"), FrontbaseData.text (string))
+        }
+
+        database.autoCommit = false
+        _ = try await database.query ("INSERT INTO foo VALUES (?)", ["Sed euismod lacus a magna aliquam".frontbaseData! ]).get()
+        _ = try await database.query ("ROLLBACK").get()
+        if let result = try await database.query ("SELECT COUNT (*) AS counter, MIN (string) AS value FROM foo").get().first {
+            XCTAssertEqual (result.firstValue (forColumn: "counter"), FrontbaseData.float (1.0))
+            XCTAssertEqual (result.firstValue (forColumn: "value"), FrontbaseData.text (string))
+        }
+        _ = try await database.query ("INSERT INTO foo VALUES (?)", [ "Donec eget sollicitudin odio".frontbaseData! ]).get()
+        _ = try await database.query ("COMMIT").get()
+        if let result = try await database.query ("SELECT COUNT (*) AS counter, MIN (string) AS value FROM foo").get().first {
+            XCTAssertEqual (result.firstValue (forColumn: "counter"), FrontbaseData.float (2.0))
+            XCTAssertEqual (result.firstValue (forColumn: "value"), FrontbaseData.text ("Donec eget sollicitudin odio"))
+        }
+    }
+#endif
+
     func testAllocation() throws {
         let database = try FrontbaseConnection.makeFilebasedTest();
         let before = getMemoryUsed()

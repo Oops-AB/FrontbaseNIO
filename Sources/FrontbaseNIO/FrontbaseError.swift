@@ -14,7 +14,7 @@ public struct FrontbaseError: Error, CustomStringConvertible, LocalizedError {
         return self.description
     }
 
-    internal init (reason: Reason, message: String) {
+    public init (reason: Reason, message: String) {
         self.reason = reason
         self.message = message
     }
@@ -26,7 +26,7 @@ public struct FrontbaseError: Error, CustomStringConvertible, LocalizedError {
 }
 
 /// Reasons.
-internal enum Reason {
+public enum Reason {
     case error
     case intern
     case permission

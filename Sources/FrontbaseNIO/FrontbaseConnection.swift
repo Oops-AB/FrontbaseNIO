@@ -294,7 +294,28 @@ public final class FrontbaseConnection {
                 }
             }
     }
-    
+
+#if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
+    @inlinable
+    public func withTransaction<R> (_ closure: (_ connection: FrontbaseConnection) async throws -> R) async throws -> R {
+        let _ = try await self.query ("VALUES 0").get()
+        guard self.autoCommit == true else {
+            throw FrontbaseError (reason: .openTransaction, message: "A transaction is already in progress")
+        }
+        defer { self.autoCommit = false }
+        do {
+            self.autoCommit = true
+            let result = try await closure (self)
+            let _ = try await self.query ("COMMIT").get()
+            return result
+        } catch {
+            let _ = try await self.query ("ROLLBACK").get()
+            throw error
+        }
+    }
+#endif
+
     deinit {
         assert (self.databaseConnection == nil, "FrontbaseConnection was not closed before deinitializing")
     }
