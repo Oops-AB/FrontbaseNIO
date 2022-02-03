@@ -303,14 +303,15 @@ public final class FrontbaseConnection {
         guard self.autoCommit == true else {
             throw FrontbaseError (reason: .openTransaction, message: "A transaction is already in progress")
         }
-        defer { self.autoCommit = false }
+        self.autoCommit = false
         do {
-            self.autoCommit = true
             let result = try await closure (self)
             let _ = try await self.query ("COMMIT").get()
+            self.autoCommit = true
             return result
         } catch {
             let _ = try await self.query ("ROLLBACK").get()
+            self.autoCommit = true
             throw error
         }
     }
