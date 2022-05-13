@@ -2,6 +2,10 @@
 
 OS=$(uname)
 
+if [[ -f /Library/Frameworks/FBCAccess.framework/FBCAccess ]]; then
+    FRONTBASE_FRAMEWORK=/Library/Frameworks/FBCAccess.framework
+fi
+
 IFS=':' read -ra FRONTBASE_DIRS <<< "/Library/FrontBase:/Library:/usr/local/FrontBase:/usr/local:/usr:/opt:/var"
 for DIRECTORY in "${FRONTBASE_DIRS[@]}"; do
     if [[ -d "$DIRECTORY" ]]; then
@@ -39,19 +43,32 @@ done
 if [[ -z "$PKG_CONFIG_PATH" ]]; then
     echo "No pkgConfig file found for FCBAccess"
 
-    for DIRECTORY in "${CONFIG_DIRS[@]}"; do
-        if [[ -d "$DIRECTORY" ]]; then
-            echo "Will create file at $DIRECTORY/FBCAccess.pc"
-            echo "Will sudo"
-            sudo tee "$DIRECTORY/FBCAccess.pc" > /dev/null <<END
+    if [[ -n "$FRONTBASE_FRAMEWORK" ]]; then
+        echo "Will create file at $DIRECTORY/FBCAccess.pc"
+        echo "Will sudo"
+        sudo tee "$DIRECTORY/FBCAccess.pc" > /dev/null <<END
+Name: FBCAccess
+Description: Frontbase client library
+Version: 1.0
+Cflags: -F/Library/Frameworks -I${FRONTBASE_FRAMEWORK}/Versions/Current/Headers
+Libs: -F/Library/Frameworks -framework FBCAccess
+END
+    else
+        for DIRECTORY in "${CONFIG_DIRS[@]}"; do
+            if [[ -d "$DIRECTORY" ]]; then
+                echo "Will create file at $DIRECTORY/FBCAccess.pc"
+                echo "Will sudo"
+                sudo tee "$DIRECTORY/FBCAccess.pc" > /dev/null <<END
+Name: FBCAccess
 Description: Frontbase client library
 Version: 1.0
 Cflags: -I${INCLUDE_DIRECTORY}
 Libs: -L${LIBRARY_DIRECTORY} -lFBCAccess
 END
-            break
-        fi
-    done
+                break
+            fi
+        done
+    fi
 else
     echo "Found pkgConfig file at $PKG_CONFIG_PATH"
 fi
