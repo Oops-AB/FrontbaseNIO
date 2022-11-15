@@ -90,6 +90,7 @@ public final class FrontbaseConnection {
             var errorMessage: UnsafePointer<Int8>? = nil
             var connection: FBSConnection? = nil
             var sessionMode: SessionMode = .serializable (.pessimistic, .readOnly)
+            let systemUser = ProcessInfo.processInfo.environment["USER"] ?? ""
 
             switch storage {
                 case .named (let databaseName, let hostName, let username, let password, let databasePassword, let mode):
@@ -101,7 +102,7 @@ public final class FrontbaseConnection {
                                                          username.uppercased(),
                                                          password,
                                                          sessionName,
-                                                         ProcessInfo.processInfo.environment["USER"],
+                                                         systemUser,
                                                          errorMessagePointer)
                 }
 
@@ -114,7 +115,7 @@ public final class FrontbaseConnection {
                                                          username.uppercased(),
                                                          password,
                                                          sessionName,
-                                                         ProcessInfo.processInfo.environment["USER"],
+                                                         systemUser,
                                                          errorMessagePointer)
                 }
             }
