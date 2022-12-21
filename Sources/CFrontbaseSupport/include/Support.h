@@ -148,7 +148,7 @@ const char* fbsGetCharacter (FBSRow row, unsigned column);
 const char* fbsGetBlobHandle (FBSRow row, unsigned column, unsigned* size);
 
 /// Return a timestamp value from a result row.
-const char* fbsGetTimestamp (FBSRow row, unsigned column);
+double fbsGetTimestamp (FBSRow row, unsigned column);
 
 /// Return a daytime value from a result row.
 double fbsGetDayTime (FBSRow row, unsigned column);
@@ -196,7 +196,7 @@ const char* fbsGetAnyTypeCharacter (FBSRow row, unsigned column);
 const char* fbsGetAnyTypeBlobHandle (FBSRow row, unsigned column, unsigned* size);
 
 /// Return an ANY TYPE timestamp value from a result row.
-const char* fbsGetAnyTypeTimestamp (FBSRow row, unsigned column);
+double fbsGetAnyTypeTimestamp (FBSRow row, unsigned column);
 
 /// Return an ANY TYPE bit value size from a result row.
 unsigned fbsGetAnyTypeBitSize (FBSRow row, unsigned column);

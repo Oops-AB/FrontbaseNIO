@@ -72,5 +72,6 @@ import FrontbaseNIO
         .wait()
 ```
 
-## Contributors
+## Note
 
+The Frontbase connection will be setup to use the `UTC` time zone, for optimal interoperability with the `Date` type. If you, for some reason, generate timestamp literals in raw SQL, make sure that those are expresssed in the UTC time zone.

@@ -235,7 +235,6 @@ class FrontbaseNIOTests: XCTestCase {
         let database = try FrontbaseConnection.makeFilebasedTest(); defer { database.destroyTest() }
         let timestamp = Date()
 
-        FrontbaseData.timeZone = TimeZone (abbreviation: "UTC")
         _ = try database.query ("CREATE TABLE foo (bar TIMESTAMP)").wait()
         _ = try database.query ("INSERT INTO foo VALUES (?)", [ timestamp.frontbaseData! ]).wait()
 

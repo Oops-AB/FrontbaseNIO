@@ -103,6 +103,24 @@ FBSConnection fbsConnectDatabaseAtPath (const char* databaseName,
 
 		return NULL;
 	} else {
+        fbcdcSetFormatResult (connection, 0);
+
+        const char* timeZoneMessage = NULL;
+
+        FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage);
+
+        if (result == NULL) {
+            if (errorMessage != NULL) {
+                *errorMessage = timeZoneMessage;
+            }
+
+            fbcmdRelease (session);
+            fbcdcClose (connection);
+            fbcdcRelease (connection);
+
+            return NULL;
+        }
+
 		return fbcdcRetain (connection);
 	}
 }
@@ -405,10 +423,10 @@ const char* fbsGetBlobHandle (FBSRow row, unsigned column, unsigned* size) {
 }
 
 /// Return a timestamp value from a result row.
-const char* fbsGetTimestamp (FBSRow row, unsigned column) {
+double fbsGetTimestamp (FBSRow row, unsigned column) {
 	FBCRow* fbcRow = row;
 
-	return fbcRow[column]->timestamp;
+	return fbcRow[column]->rawTimestamp.seconds;
 }
 
 /// Return a daytime value from a result row.
@@ -518,10 +536,10 @@ const char* fbsGetAnyTypeBlobHandle (FBSRow row, unsigned column, unsigned* size
 }
 
 /// Return an ANY TYPE timestamp value from a result row.
-const char* fbsGetAnyTypeTimestamp (FBSRow row, unsigned column) {
+double fbsGetAnyTypeTimestamp (FBSRow row, unsigned column) {
 	FBCRow* fbcRow = row;
 
-	return fbcRow[column]->anyType.column->timestamp;
+	return fbcRow[column]->anyType.column->rawTimestamp.seconds;
 }
 
 /// Return an ANY TYPE bit value size from a result row.

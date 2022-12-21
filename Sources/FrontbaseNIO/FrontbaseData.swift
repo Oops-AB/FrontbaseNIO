@@ -29,8 +29,6 @@ public enum FrontbaseData: Equatable, Encodable {
 
     static private let timestampFormatters = FrontbaseData.makeTimestampFormatters()
 
-    public static var timeZone = TimeZone (abbreviation: "UTC")
-
     private static func makeTimestampFormatters() -> [Int: DateFormatter] {
         return [
             19: makeTimestampFormatter (for: 19),
@@ -45,7 +43,7 @@ public enum FrontbaseData: Equatable, Encodable {
     private static func makeTimestampFormatter (for length: Int) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = String ("yyyy-MM-dd HH:mm:ss.SSSSSS".prefix (length))
-        formatter.timeZone = timeZone
+        formatter.timeZone = TimeZone (identifier: "UTC")
 
         return formatter
     }
@@ -119,12 +117,7 @@ public enum FrontbaseData: Equatable, Encodable {
                     throw FrontbaseError (reason: .error, message: "Unexpected column type.")
 
                 case FBS_Timestamp:
-                    let timestampString = String (cString: fbsGetTimestamp (row, columnIndex))
-                    if let timestamp = FrontbaseData.timestampFormatters[timestampString.count]?.date (from: timestampString) {
-                        return .timestamp (timestamp)
-                    } else {
-                        throw FrontbaseError (reason: .error, message: "Unable to parse timestamp \(timestampString).")
-                    }
+                    return .timestamp (Date (timeIntervalSinceReferenceDate: fbsGetTimestamp(row, columnIndex)))
 
                 case FBS_TimestampTZ:
                     throw FrontbaseError (reason: .error, message: "Unexpected column type.")
@@ -223,12 +216,7 @@ public enum FrontbaseData: Equatable, Encodable {
                     throw FrontbaseError (reason: .error, message: "Unexpected column type.")
 
                 case FBS_Timestamp:
-                    let timestampString = String (cString: fbsGetAnyTypeTimestamp (row, columnIndex))
-                    if let timestamp = FrontbaseData.timestampFormatters[timestampString.count]?.date (from: timestampString) {
-                        return .timestamp (timestamp)
-                    } else {
-                        throw FrontbaseError (reason: .error, message: "Unable to parse timestamp \(timestampString).")
-                    }
+                    return .timestamp (Date (timeIntervalSinceReferenceDate: fbsGetTimestamp(row, columnIndex)))
 
                 case FBS_TimestampTZ:
                     throw FrontbaseError (reason: .error, message: "Unexpected column type.")
