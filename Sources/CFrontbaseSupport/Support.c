@@ -4,7 +4,7 @@
 
 // Internal
 const char* digestPassword (const char* username, const char* password, char* digest) {
-	if ((username == NULL) || (password == NULL)) {
+	if (password == NULL) {
 		return NULL;
 	} else {
 		return fbcDigestPassword (username, password, digest);
@@ -23,10 +23,10 @@ FBSConnection fbsConnectDatabaseOnHost (const char* databaseName,
                                         const char* operatingSystemUser,
 										const char** errorMessage) {
 	const char* localError = NULL;
-	FBCDatabaseConnection* connection = fbcdcConnectToDatabaseRM (databaseName, hostName, databasePassword, &localError);
+	char digest[1000];
+	FBCDatabaseConnection* connection = fbcdcConnectToDatabaseRM (databaseName, hostName, digestPassword ("_SYSTEM", databasePassword, digest), &localError);
 	FBCMetaData* session;
 	FBCErrorMetaData* errorMetaData;
-    char digest[1000];
 
 	if (connection == NULL) {
 		if (errorMessage != NULL) {
@@ -71,10 +71,10 @@ FBSConnection fbsConnectDatabaseAtPath (const char* databaseName,
                                         const char* operatingSystemUser,
 										const char** errorMessage) {
 	const char* localError = NULL;
-	FBCDatabaseConnection* connection = fbcdcConnectToPathRM (databaseName, filePath, databasePassword, &localError);
+	char digest[1000];
+	FBCDatabaseConnection* connection = fbcdcConnectToPathRM (databaseName, filePath, digestPassword ("_SYSTEM", databasePassword, digest), &localError);
 	FBCMetaData* session;
 	FBCErrorMetaData* errorMetaData;
-	char digest[1000];
 
 	if (connection == NULL) {
 		if (errorMessage != NULL) {

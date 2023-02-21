@@ -12,11 +12,11 @@ struct TestDatabase {
     let storage: FrontbaseConnection.Storage
     let threadPool: NIOThreadPool
 
-    internal init (name: String) {
+    internal init (name: String, databasePassword: String? = nil) {
         threadPool = NIOThreadPool (numberOfThreads: 1)
         fbsCreateDatabaseWithUrl ("frontbase://localhost/\(name)")
         fbsStartDatabaseWithUrl ("frontbase://localhost/\(name)")
-        storage = .named (name: name, hostName: "localhost", username: "_system", password: "")
+        storage = .named (name: name, hostName: "localhost", username: "_system", password: "", databasePassword: databasePassword)
     }
 
     internal func newConnection (on eventLoop: EventLoop) throws -> FrontbaseConnection {
