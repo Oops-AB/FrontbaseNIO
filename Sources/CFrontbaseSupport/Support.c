@@ -55,6 +55,24 @@ FBSConnection fbsConnectDatabaseOnHost (const char* databaseName,
 
 		return NULL;
 	} else {
+        fbcdcSetFormatResult (connection, 0);
+
+        const char* timeZoneMessage = NULL;
+
+        FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage);
+
+        if (result == NULL) {
+            if (errorMessage != NULL) {
+                *errorMessage = timeZoneMessage;
+            }
+
+            fbcmdRelease (session);
+            fbcdcClose (connection);
+            fbcdcRelease (connection);
+
+            return NULL;
+        }
+
 		return fbcdcRetain (connection);
 	}
 }
