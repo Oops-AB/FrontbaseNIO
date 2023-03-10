@@ -216,7 +216,7 @@ public enum FrontbaseData: Equatable, Encodable {
                     throw FrontbaseError (reason: .error, message: "Unexpected column type.")
 
                 case FBS_Timestamp:
-                    return .timestamp (Date (timeIntervalSinceReferenceDate: fbsGetTimestamp(row, columnIndex)))
+                    return .timestamp (Date (timeIntervalSinceReferenceDate: fbsGetAnyTypeTimestamp(row, columnIndex)))
 
                 case FBS_TimestampTZ:
                     throw FrontbaseError (reason: .error, message: "Unexpected column type.")

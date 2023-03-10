@@ -370,7 +370,8 @@ class FrontbaseNIOTests: XCTestCase {
             true,
             37,
             3.1415926535898,
-            "Kilroy was here!"
+            "Kilroy was here!",
+            Date (timeIntervalSinceReferenceDate: 1_000_000_000)
         ]
 
         _ = try database.query ("CREATE TABLE foo (bar ANY TYPE)").wait()
