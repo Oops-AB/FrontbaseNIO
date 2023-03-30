@@ -603,3 +603,15 @@ void fbsReleaseBlobHandle (FBSBlob blob) {
 
 	fbcbhRelease (blobHandle);
 }
+
+/// Fetch message from a result set
+const char* fbsFetchMessage (FBSResult result) {
+	FBCMetaData* metadata = result;
+	const char* row = fbcmdMessage (metadata);
+
+	if (row == NULL) {
+		return NULL;
+	} else {
+		return row;
+	}
+}

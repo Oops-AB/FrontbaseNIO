@@ -132,7 +132,13 @@ internal class FrontbaseStatement {
         }
     }
 
-    // MARK: Private
+    internal func message() throws -> String? {
+        if let message = fbsFetchMessage (resultSet) {
+            return String (cString: message)
+        } else {
+            return nil
+        }
+    }
 }
 
 internal enum FrontbaseStatementNode {

@@ -70,7 +70,7 @@ public final class FrontbaseConnection {
     public var logger: Logger {
         return self.connectionLogger
     }
-    private var blockingIO: NIOThreadPool
+    internal var blockingIO: NIOThreadPool
 
     /// When set to true, will execute statements with the auto commit flag set
     public var autoCommit = true

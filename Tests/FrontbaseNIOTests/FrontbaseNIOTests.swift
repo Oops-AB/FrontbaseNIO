@@ -462,6 +462,19 @@ class FrontbaseNIOTests: XCTestCase {
     }
 #endif
 
+#if compiler(>=5.5) && canImport(_Concurrency)
+@available (macOS 12, iOS 15, *)
+    func testCommand() async throws {
+        let database = try FrontbaseConnection.makeFilebasedTest(); defer { database.destroyTest() }
+
+        _ = try await database.query ("CREATE TABLE foo (\"string\" CHARACTER (100))").get()
+
+        if let result = try await database.command ("EXTRACT TABLE foo") {
+            XCTAssertEqual (result, #"{COLUMNS = ({ NAME = "string"; CODE = 9; DATATYPE = CHARACTER; WIDTH = 100; NORMALIZE = NO; PRIVS = (SELECT, INSERT, UPDATE, REFERENCES); }); PRIVS = (SELECT, INSERT, UPDATE, DELETE, REFERENCES); CATALOG = "DATABASE"; SCHEMA = "_SYSTEM"; TABLE = "foo"; "TABLE DISK ZONE" = "SYSTEM"; "VARYING DISK ZONE" = "SYSTEM"; "INDEX DISK ZONE" = "SYSTEM"; "LOB DISK ZONE" = "SYSTEM"; "INDEX MODE" = "PRESERVE TIME"; ROW_COUNT = 0; "LOOK SEE" = (  ); }"#)
+        }
+    }
+#endif
+
     func testAllocation() throws {
         let database = try FrontbaseConnection.makeFilebasedTest();
         let before = getMemoryUsed()

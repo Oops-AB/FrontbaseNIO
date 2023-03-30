@@ -216,4 +216,7 @@ const char* fbsGetBlobHandleString (FBSBlob blob);
 /// Release a blob handle
 void fbsReleaseBlobHandle (FBSBlob blob);
 
+/// Fetch message from a result set
+const char* fbsFetchMessage (FBSResult result);
+
 #endif
