@@ -27,26 +27,28 @@ public enum FrontbaseData: Equatable, Encodable {
     /// `NULL`.
     case null
 
-    static private let timestampFormatters = FrontbaseData.makeTimestampFormatters()
+    static private let timestampParsers = FrontbaseData.makeTimestampParsers()
 
-    private static func makeTimestampFormatters() -> [Int: DateFormatter] {
+    private static func makeTimestampParsers() -> [Int: DateFormatter] {
         return [
-            19: makeTimestampFormatter (for: 19),
-            21: makeTimestampFormatter (for: 21),
-            22: makeTimestampFormatter (for: 22),
-            23: makeTimestampFormatter (for: 23),
-            24: makeTimestampFormatter (for: 24),
-            25: makeTimestampFormatter (for: 25),
-            26: makeTimestampFormatter (for: 26)
+            19: makeTimestampParser (for: 19),
+            21: makeTimestampParser (for: 21),
+            22: makeTimestampParser (for: 22),
+            23: makeTimestampParser (for: 23),
+            24: makeTimestampParser (for: 24),
+            25: makeTimestampParser (for: 25),
+            26: makeTimestampParser (for: 26)
         ]
     }
-    private static func makeTimestampFormatter (for length: Int) -> DateFormatter {
+    private static func makeTimestampParser (for length: Int) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = String ("yyyy-MM-dd HH:mm:ss.SSSSSS".prefix (length))
         formatter.timeZone = TimeZone (identifier: "UTC")
 
         return formatter
     }
+
+    static private let timestampFormatter = FrontbaseTimestampFormatter (6)
 
     /// See `Encodable`.
     public func encode (to encoder: Encoder) throws {
@@ -303,7 +305,7 @@ extension FrontbaseData {
             case .integer (let int): return int.description
             case .null: return "null"
             case .text (let text): return "'" + text.split (separator: "'", omittingEmptySubsequences: false).joined (separator: "''") + "'"
-            case .timestamp (let timestamp): return "TIMESTAMP '\(FrontbaseData.timestampFormatters[26]!.string (from: timestamp))'"
+            case .timestamp (let timestamp): return "TIMESTAMP '\(FrontbaseData.timestampFormatter.string (from: timestamp))'"
         }
     }
 }
