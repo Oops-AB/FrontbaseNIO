@@ -17,30 +17,29 @@ internal class FrontbaseStatement {
         }
     }
 
+    enum ParseState {
+        case text
+        case beginningOfQuotedString
+        case quotedString
+        case possibleEndOfQuotedString
+        case quotedName
+    }
     private static func parse (sql: String) -> [FrontbaseStatementNode] {
         var nodes = [FrontbaseStatementNode]()
-        var inQuotedString = false
-        var inQuotedName = false
+        var state = ParseState.text
         var index = sql.startIndex
         var character: Character
         var previousStart = index
-        var previousCharacter: Character?
 
         while index < sql.endIndex {
             character = sql[index]
-            switch character {
-                case "'":
-                    if inQuotedString && (previousCharacter != "'") {
-                        inQuotedString = false
-                    } else if !inQuotedName {
-                        inQuotedString = true
-                    }
-
-                case "\"":
-                    inQuotedName = !inQuotedName
-
-                case "?":
-                    if !inQuotedString && !inQuotedName {
+            switch state {
+                case .text:
+                    if character == "'" {
+                        state = .beginningOfQuotedString
+                    } else if character == "\"" {
+                        state = .quotedName
+                    } else if character == "?" {
                         if previousStart < index {
                             nodes.append (.text (sql[previousStart ..< index]))
                             previousStart = sql.index (after: index)
@@ -48,11 +47,31 @@ internal class FrontbaseStatement {
                         nodes.append (.placeholder)
                     }
 
-                default:
-                    break
+                case .beginningOfQuotedString:
+                    if character == "'" {
+                        state = .possibleEndOfQuotedString
+                    } else {
+                        state = .quotedString
+                    }
+
+                case .quotedString:
+                    if character == "'" {
+                        state = .possibleEndOfQuotedString
+                    }
+
+                case .possibleEndOfQuotedString:
+                    if character == "'" {
+                        state = .quotedString
+                    } else {
+                        state = .text
+                    }
+
+                case .quotedName:
+                    if character == "\"" {
+                        state = .text
+                    }
             }
 
-            previousCharacter = character
             index = sql.index (after: index)
         }
 

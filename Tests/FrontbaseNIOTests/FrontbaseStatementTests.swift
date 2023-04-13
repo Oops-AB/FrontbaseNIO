@@ -45,4 +45,20 @@ final class FrontbaseStatementTests: XCTestCase {
 
         XCTAssertEqual (preparedStatement.sql, "SELECT a, \"b\", c, '''; DROP TABLE bob;' FROM t WHERE a = 7 AND b = 'What?' OR c = 'Strange''!'")
     }
+
+    func testEmptyStringStatement() throws {
+        let database = try FrontbaseConnection.makeFilebasedTest(); defer { database.destroyTest() }
+        let preparedStatement = try FrontbaseStatement (query: """
+            update "bof_message_template_texts" set "text" = '' where "_pk" = x'deadbeefabcd000000000000';
+            update "bof_message_template_texts" set "text" = 'Är du&nbsp;<b>pensionär</b>? Då ska du istället ladda upp&nbsp;<b>utbetalningsplan/beslut
+        från Pensionsmyndigheten</b>');
+        """, on: database)
+        try preparedStatement.bind ([])
+
+        XCTAssertEqual (preparedStatement.sql, """
+            update "bof_message_template_texts" set "text" = '' where "_pk" = x'deadbeefabcd000000000000';
+            update "bof_message_template_texts" set "text" = 'Är du&nbsp;<b>pensionär</b>? Då ska du istället ladda upp&nbsp;<b>utbetalningsplan/beslut
+        från Pensionsmyndigheten</b>');
+        """)
+    }
 }
