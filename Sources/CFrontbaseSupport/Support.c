@@ -191,7 +191,7 @@ FBSResult fbsExecuteSQL (FBSConnection connection,
                          bool autoCommit,
                          const char** errorMessage) {
 	FBCDatabaseConnection* databaseConnection = connection;
-    FBCMetaData* metadata = fbcdcExecuteSQL (databaseConnection, (char*)sql, strlen (sql), autoCommit ? FBCDCCommit : 0);
+    FBCMetaData* metadata = fbcdcExecuteSQL (databaseConnection, (char*)sql, (unsigned int)strlen (sql), autoCommit ? FBCDCCommit : 0);
 	FBCErrorMetaData* errorMetaData;
 
 	if (fbcmdErrorsFound (metadata)) {

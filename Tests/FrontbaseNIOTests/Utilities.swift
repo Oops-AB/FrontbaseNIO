@@ -46,7 +46,7 @@ extension FrontbaseConnection {
         if let templatePointer = template.cString (using: .utf8) {
             let buffer = UnsafeMutablePointer<Int8>.allocate (capacity: templatePointer.count)
 
-            buffer.assign (from: templatePointer, count: templatePointer.count)
+            buffer.update (from: templatePointer, count: templatePointer.count)
             if let result = mkdtemp (buffer) {
                 return String (cString: result)
             }
