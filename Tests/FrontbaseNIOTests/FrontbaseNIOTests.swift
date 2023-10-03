@@ -109,15 +109,15 @@ class FrontbaseNIOTests: XCTestCase {
 
     func testDecimals() throws {
         let database = try FrontbaseConnection.makeFilebasedTest(); defer { database.destroyTest() }
-        let max = 42000000.0
-        let min = 1.23
+        let max: Decimal = 42000000.0
+        let min: Decimal = 1.23
 
         _ = try database.query ("CREATE TABLE foo (\"max\" DECIMAL, \"min\" DECIMAL (30, 3))").wait()
         _ = try database.query ("INSERT INTO foo VALUES (?, ?)", [max.frontbaseData!, min.frontbaseData!]).wait()
 
         if let result = try! database.query ("SELECT * FROM foo").wait().first {
-            XCTAssertEqual (result.firstValue (forColumn: "max"), FrontbaseData.float (max))
-            XCTAssertEqual (result.firstValue (forColumn: "min"), FrontbaseData.float (min))
+            XCTAssertEqual (result.firstValue (forColumn: "max"), FrontbaseData.decimal (max))
+            XCTAssertEqual (result.firstValue (forColumn: "min"), FrontbaseData.decimal (min))
         }
     }
 

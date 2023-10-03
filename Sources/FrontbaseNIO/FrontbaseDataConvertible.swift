@@ -209,6 +209,25 @@ extension BinaryFloatingPoint {
 extension Double: FrontbaseDataConvertible { }
 extension Float: FrontbaseDataConvertible { }
 
+extension Decimal: FrontbaseDataConvertible {
+    public init? (frontbaseData: FrontbaseData) {
+        switch frontbaseData {
+            case .integer (let integer):
+                self = .init (integer)
+
+            case .float (let double):
+                self = .init (double)
+
+            default:
+                return nil
+        }
+    }
+    
+    public var frontbaseData: FrontbaseData? {
+        return .decimal (self)
+    }
+}
+
 extension Bool: FrontbaseDataConvertible {
     /// See `FrontbaseDataConvertible.init?(:)`
     public init? (frontbaseData: FrontbaseData) {

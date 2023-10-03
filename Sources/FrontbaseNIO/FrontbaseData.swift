@@ -12,6 +12,9 @@ public enum FrontbaseData: Equatable, Encodable {
     /// `Double`.
     case float (Double)
     
+    /// `Decimal`.
+    case decimal (Decimal)
+
     /// `String`.
     case text (String)
     
@@ -57,6 +60,7 @@ public enum FrontbaseData: Equatable, Encodable {
             case .boolean (let value): try container.encode (value)
             case .integer (let value): try container.encode (value)
             case .float (let value): try container.encode (value)
+            case .decimal (let value): try container.encode (value)
             case .text (let value): try container.encode (value)
             case .blob (let value): try container.encode (value)
             case .null: try container.encodeNil()
@@ -95,7 +99,7 @@ public enum FrontbaseData: Equatable, Encodable {
                     return .float (fbsGetNumeric (row, columnIndex))
 
                 case FBS_Decimal:
-                    return .float (fbsGetDecimal (row, columnIndex))
+                    return .decimal (Decimal (fbsGetDecimal (row, columnIndex)))
 
                 case FBS_Character:
                     return .text (String (cString: fbsGetCharacter (row, columnIndex)))
@@ -279,6 +283,7 @@ extension FrontbaseData: CustomStringConvertible {
             case .boolean (let boolean): return boolean ? "true" : "false"
             case .blob (let blob): return blob.description
             case .float (let float): return float.description
+            case .decimal (let decimal): return decimal.description
             case .integer (let int): return int.description
             case .null: return "null"
             case .text (let text): return "\"" + text + "\""
@@ -303,6 +308,7 @@ extension FrontbaseData {
                 }
             case .float (let float): return float.description
             case .integer (let int): return int.description
+            case .decimal (let decimal): return decimal.description
             case .null: return "null"
             case .text (let text): return "'" + text.split (separator: "'", omittingEmptySubsequences: false).joined (separator: "''") + "'"
             case .timestamp (let timestamp): return "TIMESTAMP '\(FrontbaseData.timestampFormatter.string (from: timestamp))'"
