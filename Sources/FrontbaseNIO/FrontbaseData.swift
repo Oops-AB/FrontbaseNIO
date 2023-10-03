@@ -198,7 +198,7 @@ public enum FrontbaseData: Equatable, Encodable {
                     return .float (fbsGetAnyTypeNumeric (row, columnIndex))
 
                 case FBS_Decimal:
-                    return .float (fbsGetAnyTypeDecimal (row, columnIndex))
+                    return .decimal (Decimal (fbsGetAnyTypeDecimal (row, columnIndex)))
 
                 case FBS_Character:
                     return .text (String (cString: fbsGetAnyTypeCharacter (row, columnIndex)))
