@@ -136,7 +136,7 @@ internal class FrontbaseStatement {
                 let labelName = String (cString: info.labelName)
                 let column = FrontbaseColumn (table: tableName == "_NA" ? nil : tableName, name: labelName)
 
-                columnData[column] = try FrontbaseData.retrieve (from: row, at: columnIndex, type: info.datatype, statement: self)
+                columnData[column] = try FrontbaseData.retrieve (from: row, at: columnIndex, columnInfo: info, statement: self, resultSet: resultSet!)
             }
 
             fbsReleaseRow (row)

@@ -218,6 +218,9 @@ extension Decimal: FrontbaseDataConvertible {
             case .float (let double):
                 self = .init (double)
 
+            case .decimal (let decimal):
+                self = decimal
+
             default:
                 return nil
         }

@@ -69,11 +69,11 @@ public enum FrontbaseData: Equatable, Encodable {
         }
     }
 
-    internal static func retrieve (from row: FBSRow, at columnIndex: UInt32, type: FBSDatatype, statement: FrontbaseStatement) throws -> FrontbaseData {
+    internal static func retrieve (from row: FBSRow, at columnIndex: UInt32, columnInfo: FBSColumnInfo, statement: FrontbaseStatement, resultSet: FBSResult) throws -> FrontbaseData {
         if fbsIsNull (row, columnIndex) {
             return .null
         } else {
-            switch type {
+            switch columnInfo.datatype {
                 case FBS_PrimaryKey:
                     return .integer (fbsGetInteger (row, columnIndex))
 
@@ -99,7 +99,16 @@ public enum FrontbaseData: Equatable, Encodable {
                     return .float (fbsGetNumeric (row, columnIndex))
 
                 case FBS_Decimal:
-                    return .decimal (Decimal (fbsGetDecimal (row, columnIndex)))
+                    if #available(macOS 12.0, *) {
+                        let scale = fbsGetScale (resultSet, row, columnIndex)
+                        if let decimal = try? Decimal (String (format: "%.\(scale)f", fbsGetDecimal (row, columnIndex)), format: .number.locale (Locale (identifier: "en_us_POSIX"))) {
+                            return .decimal (decimal)
+                        } else {
+                            return .decimal (Decimal (fbsGetDecimal (row, columnIndex)))
+                        }
+                    } else {
+                        return .decimal (Decimal (fbsGetDecimal (row, columnIndex)))
+                    }
 
                 case FBS_Character:
                     return .text (String (cString: fbsGetCharacter (row, columnIndex)))
@@ -160,7 +169,7 @@ public enum FrontbaseData: Equatable, Encodable {
                     throw FrontbaseError (reason: .error, message: "Unexpected column type.")
 
                 case FBS_AnyType:
-                    return try retrieveAnyType (from: row, at: columnIndex, type: fbsGetAnyTypeType (row, columnIndex), statement: statement)
+                    return try retrieveAnyType (from: row, at: columnIndex, type: fbsGetAnyTypeType (row, columnIndex), statement: statement, resultSet: resultSet)
 
                 default:
                     throw FrontbaseError (reason: .error, message: "Unexpected column type.")
@@ -168,7 +177,7 @@ public enum FrontbaseData: Equatable, Encodable {
         }
     }
 
-    internal static func retrieveAnyType (from row: FBSRow, at columnIndex: UInt32, type: FBSDatatype, statement: FrontbaseStatement) throws -> FrontbaseData {
+    internal static func retrieveAnyType (from row: FBSRow, at columnIndex: UInt32, type: FBSDatatype, statement: FrontbaseStatement, resultSet: FBSResult) throws -> FrontbaseData {
         if fbsAnyTypeIsNull (row, columnIndex) {
             return .null
         } else {
@@ -198,7 +207,16 @@ public enum FrontbaseData: Equatable, Encodable {
                     return .float (fbsGetAnyTypeNumeric (row, columnIndex))
 
                 case FBS_Decimal:
-                    return .decimal (Decimal (fbsGetAnyTypeDecimal (row, columnIndex)))
+                    if #available(macOS 12.0, *) {
+                        let scale = fbsGetAnyTypeScale (resultSet, row, columnIndex)
+                        if let decimal = try? Decimal (String (format: "%.\(scale)f", fbsGetAnyTypeDecimal (row, columnIndex)), format: .number.locale (Locale (identifier: "en_us_POSIX"))) {
+                            return .decimal (decimal)
+                        } else {
+                            return .decimal (Decimal (fbsGetAnyTypeDecimal (row, columnIndex)))
+                        }
+                    } else {
+                        return .decimal (Decimal (fbsGetAnyTypeDecimal (row, columnIndex)))
+                    }
 
                 case FBS_Character:
                     return .text (String (cString: fbsGetAnyTypeCharacter (row, columnIndex)))

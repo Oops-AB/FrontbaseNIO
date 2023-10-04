@@ -141,6 +141,9 @@ double fbsGetReal (FBSRow row, unsigned column);
 /// Return a decimal value from a result row.
 double fbsGetDecimal (FBSRow row, unsigned column);
 
+/// Return scale of value from a result row.
+long fbsGetScale (FBSResult result, FBSRow row, unsigned column);
+
 /// Return a character value from a result row.
 const char* fbsGetCharacter (FBSRow row, unsigned column);
 
@@ -188,6 +191,9 @@ double fbsGetAnyTypeReal (FBSRow row, unsigned column);
 
 /// Return an ANY TYPE decimal value from a result row.
 double fbsGetAnyTypeDecimal (FBSRow row, unsigned column);
+
+/// Return scale of an ANY  TYPE value from a result row.
+long fbsGetAnyTypeScale (FBSResult result, FBSRow row, unsigned column);
 
 /// Return an ANY TYPE character value from a result row.
 const char* fbsGetAnyTypeCharacter (FBSRow row, unsigned column);

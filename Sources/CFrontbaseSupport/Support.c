@@ -425,6 +425,14 @@ double fbsGetDecimal (FBSRow row, unsigned column) {
 	return fbcRow[column]->decimal;
 }
 
+/// Return scale of value from a result row.
+long fbsGetScale (FBSResult result, FBSRow row, unsigned column) {
+    FBCRow* fbcRow = row;
+    const FBCDatatypeMetaData* datatypeMetadata = fbcmdDatatypeMetaDataAtIndex (result, column);
+
+    return fbcdmdScale (datatypeMetadata);
+}
+
 /// Return a character value from a result row.
 const char* fbsGetCharacter (FBSRow row, unsigned column) {
 	FBCRow* fbcRow = row;
@@ -536,6 +544,18 @@ double fbsGetAnyTypeDecimal (FBSRow row, unsigned column) {
     FBCRow* fbcRow = row;
 
     return fbcRow[column]->anyType.column->decimal;
+}
+
+/// Return scale of an ANY  TYPE value from a result row.
+long fbsGetAnyTypeScale (FBSResult result, FBSRow row, unsigned column) {
+    FBCRow* fbcRow = row;
+    const FBCDatatypeMetaData* datatypeMetadata = fbcmdDatatypeMetaDataAtIndex (result, column);
+    FBCDatatypeMetaData* anytypeMetadata = fbcdmdAnyTypeMetaData (datatypeMetadata, fbcRow[column]);
+    long scale = fbcdmdScale (anytypeMetadata);
+
+    fbcdmdRelease (anytypeMetadata);
+
+    return scale;
 }
 
 /// Return an ANY TYPE character value from a result row.
