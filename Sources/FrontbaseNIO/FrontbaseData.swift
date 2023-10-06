@@ -101,7 +101,7 @@ public enum FrontbaseData: Equatable, Encodable {
                 case FBS_Decimal:
                     if #available(macOS 12.0, *) {
                         let scale = fbsGetScale (resultSet, row, columnIndex)
-                        if let decimal = try? Decimal (String (format: "%.\(scale)f", fbsGetDecimal (row, columnIndex)), format: .number.locale (Locale (identifier: "en_us_POSIX"))) {
+                        if let decimal = Decimal (string: String (format: "%.\(scale)f", fbsGetDecimal (row, columnIndex)), locale: Locale (identifier: "en_us_POSIX")) {
                             return .decimal (decimal)
                         } else {
                             return .decimal (Decimal (fbsGetDecimal (row, columnIndex)))
@@ -209,7 +209,7 @@ public enum FrontbaseData: Equatable, Encodable {
                 case FBS_Decimal:
                     if #available(macOS 12.0, *) {
                         let scale = fbsGetAnyTypeScale (resultSet, row, columnIndex)
-                        if let decimal = try? Decimal (String (format: "%.\(scale)f", fbsGetAnyTypeDecimal (row, columnIndex)), format: .number.locale (Locale (identifier: "en_us_POSIX"))) {
+                        if let decimal = Decimal (string: String (format: "%.\(scale)f", fbsGetAnyTypeDecimal (row, columnIndex)), locale: Locale (identifier: "en_us_POSIX")) {
                             return .decimal (decimal)
                         } else {
                             return .decimal (Decimal (fbsGetAnyTypeDecimal (row, columnIndex)))
