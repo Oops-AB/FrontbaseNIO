@@ -188,11 +188,13 @@ extension BinaryFloatingPoint {
                 self = .init (int)
             case .float (let double):
                 self = .init (double)
+            case .decimal (let decimal):
+                self = .init (Double (truncating: decimal as NSNumber))
             default:
                 return nil
         }
     }
-    
+
     /// See `FrontbaseDataConvertible.frontbaseData`.
     public var frontbaseData: FrontbaseData? {
         switch self {
@@ -200,6 +202,8 @@ extension BinaryFloatingPoint {
                 return .float (double)
             case let float as Float:
                 return .float (.init (float))
+            case let decimal as Decimal:
+                return .float (.init (truncating: decimal as NSNumber))
             default:
                 return nil
         }

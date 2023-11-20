@@ -119,6 +119,10 @@ class FrontbaseNIOTests: XCTestCase {
             XCTAssertEqual (result.firstValue (forColumn: "max"), FrontbaseData.decimal (max))
             XCTAssertEqual (result.firstValue (forColumn: "min"), FrontbaseData.decimal (min))
         }
+
+        let decimal: Decimal = 42.0
+        let frontbaseData = decimal.frontbaseData!
+        XCTAssertEqual (Double (frontbaseData: frontbaseData), 42.0)
     }
 
     func testNumerics() throws {
