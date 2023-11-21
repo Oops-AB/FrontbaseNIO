@@ -123,6 +123,7 @@ class FrontbaseNIOTests: XCTestCase {
         let decimal: Decimal = 42.0
         let frontbaseData = decimal.frontbaseData!
         XCTAssertEqual (Double (frontbaseData: frontbaseData), 42.0)
+        XCTAssertEqual (Int (frontbaseData: frontbaseData), 42)
     }
 
     func testNumerics() throws {

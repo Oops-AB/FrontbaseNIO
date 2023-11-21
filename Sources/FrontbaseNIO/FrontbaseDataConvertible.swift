@@ -143,6 +143,15 @@ extension FixedWidthInteger {
                     return nil
                 }
                 self = numericCast (int)
+            case .decimal (let decimal):
+                let int = Int64 (truncating: decimal as NSNumber)
+                guard int <= Self.max else {
+                    return nil
+                }
+                guard int >= Self.min else {
+                    return nil
+                }
+                self = numericCast (int)
             default:
                 return nil
         }
