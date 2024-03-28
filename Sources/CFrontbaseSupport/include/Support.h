@@ -44,6 +44,7 @@ typedef struct FBSColumnInfo {
 	const char* tableName;
 	const char* labelName;
 	FBSDatatype datatype;
+    bool isNullable;
 } FBSColumnInfo;
 
 /// Open a connection, and create a session.

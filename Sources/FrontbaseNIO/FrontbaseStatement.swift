@@ -158,6 +158,103 @@ internal class FrontbaseStatement {
             return nil
         }
     }
+
+    internal func structure() throws -> [StructureColumn] {
+        let count = fbsGetColumnCount (resultSet)
+        var columns: [StructureColumn] = []
+
+        for columnIndex in 0 ..< count {
+            let info = fbsGetColumnInfoAtIndex (resultSet, columnIndex)
+            let datatype: FrontbaseDataType
+
+            switch info.datatype {
+                case FBS_PrimaryKey:
+                    datatype = .integer
+
+                case FBS_Boolean:
+                    datatype = .boolean
+
+                case FBS_Integer:
+                    datatype = .integer
+
+                case FBS_SmallInteger:
+                    datatype = .integer
+
+                case FBS_Float:
+                    datatype = .real
+
+                case FBS_Real:
+                    datatype = .real
+
+                case FBS_Double:
+                    datatype = .real
+
+                case FBS_Numeric:
+                    datatype = .real
+
+                case FBS_Decimal:
+                    datatype = .decimal
+
+                case FBS_Character:
+                    datatype = .text
+
+                case FBS_VCharacter:
+                    datatype = .text
+
+                case FBS_Bit:
+                    datatype = .bits
+
+                case FBS_VBit:
+                    datatype = .varyingbits
+
+                case FBS_Date:
+                    throw FrontbaseError (reason: .error, message: "Unexpected column type.")
+
+                case FBS_Time:
+                    throw FrontbaseError (reason: .error, message: "Unexpected column type.")
+
+                case FBS_TimeTZ:
+                    throw FrontbaseError (reason: .error, message: "Unexpected column type.")
+
+                case FBS_Timestamp:
+                    datatype = .timestamp
+
+                case FBS_TimestampTZ:
+                    throw FrontbaseError (reason: .error, message: "Unexpected column type.")
+
+                case FBS_YearMonth:
+                    throw FrontbaseError (reason: .error, message: "Unexpected column type.")
+
+                case FBS_DayTime:
+                    datatype = .real
+
+                case FBS_CLOB:
+                    datatype = .blob
+
+                case FBS_BLOB:
+                    datatype = .blob
+
+                case FBS_TinyInteger:
+                    datatype = .integer
+
+                case FBS_LongInteger:
+                    datatype = .integer
+
+                case FBS_CircaDate:
+                    throw FrontbaseError (reason: .error, message: "Unexpected column type.")
+
+                case FBS_AnyType:
+                    throw FrontbaseError (reason: .error, message: "Unexpected column type.")
+
+                default:
+                    throw FrontbaseError (reason: .error, message: "Unexpected column type.")
+            }
+
+            columns.append (StructureColumn (column: String (cString: info.labelName), type: datatype, isNullable: info.isNullable))
+        }
+
+        return columns
+    }
 }
 
 internal enum FrontbaseStatementNode {

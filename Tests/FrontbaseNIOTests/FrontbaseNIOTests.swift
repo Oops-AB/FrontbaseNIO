@@ -479,6 +479,46 @@ class FrontbaseNIOTests: XCTestCase {
             XCTAssertEqual (result, #"{COLUMNS = ({ NAME = "string"; CODE = 9; DATATYPE = CHARACTER; WIDTH = 100; NORMALIZE = NO; PRIVS = (SELECT, INSERT, UPDATE, REFERENCES); }); PRIVS = (SELECT, INSERT, UPDATE, DELETE, REFERENCES); CATALOG = "DATABASE"; SCHEMA = "_SYSTEM"; TABLE = "foo"; "TABLE DISK ZONE" = "SYSTEM"; "VARYING DISK ZONE" = "SYSTEM"; "INDEX DISK ZONE" = "SYSTEM"; "LOB DISK ZONE" = "SYSTEM"; "INDEX MODE" = "PRESERVE TIME"; ROW_COUNT = 0; "LOOK SEE" = (  ); }"#)
         }
     }
+
+@available (macOS 12, iOS 15, *)
+    func testStructure() async throws {
+        let database = try FrontbaseConnection.makeFilebasedTest(); defer { database.destroyTest() }
+
+        _ = try await database.query ("CREATE TABLE foo (\"string\" CHARACTER (100), \"real\" REAL)").get()
+        _ = try await database.query ("CREATE TABLE bar (\"nonull\" CHARACTER (100) NOT NULL, \"decimal\" DECIMAL)").get()
+
+        let plain = try await database.structure (#"SELECT "nonull", "decimal" FROM "bar" WHERE FALSE"#)
+
+        XCTAssertEqual (plain.count, 2)
+        XCTAssertEqual (plain[0].column, "nonull")
+        XCTAssertEqual (plain[0].type, .text)
+        XCTAssertEqual (plain[0].isNullable, true)
+        XCTAssertEqual (plain[1].column, "decimal")
+        XCTAssertEqual (plain[1].type, .decimal)
+        XCTAssertEqual (plain[1].isNullable, true)
+
+        let joined = try await database.structure ("""
+            SELECT "foo"."string" AS "fooString", "foo"."real", "bar"."nonull" AS "nonnull", "decimal" - 100
+              FROM "foo"
+              JOIN "bar"
+                ON "bar"."nonull" = "foo"."string"
+             WHERE FALSE
+        """)
+
+        XCTAssertEqual (joined.count, 4)
+        XCTAssertEqual (joined[0].column, "fooString")
+        XCTAssertEqual (joined[0].type, .text)
+        XCTAssertEqual (joined[0].isNullable, true)
+        XCTAssertEqual (joined[1].column, "real")
+        XCTAssertEqual (joined[1].type, .real)
+        XCTAssertEqual (joined[1].isNullable, true)
+        XCTAssertEqual (joined[2].column, "nonnull")
+        XCTAssertEqual (joined[2].type, .text)
+        XCTAssertEqual (joined[2].isNullable, true)
+        XCTAssertEqual (joined[3].column, "_C004")
+        XCTAssertEqual (joined[3].type, .decimal)
+        XCTAssertEqual (joined[3].isNullable, false)
+    }
 #endif
 
     func testAllocation() throws {

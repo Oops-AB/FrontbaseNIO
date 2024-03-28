@@ -343,6 +343,7 @@ const FBSColumnInfo fbsGetColumnInfoAtIndex (FBSResult result, unsigned column) 
 	info.tableName = fbccmdTableName (columnMetadata);
 	info.labelName = fbccmdLabelName (columnMetadata);
 	info.datatype = fbsDatatype (datatypeMetadata);
+    info.isNullable = fbccmdIsNullable (columnMetadata);
 
 	return info;
 }
