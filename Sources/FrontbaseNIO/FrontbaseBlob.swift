@@ -29,11 +29,11 @@ public class FrontbaseBlob {
         }
     }
 
-    public func data() -> Data {
+    public func data() throws -> Data {
         if let data = content {
             return data
         } else if let connection = connection, let handle = handle, let size = size {
-            let data = connection.blob (handle: handle, size: size)
+            let data = try connection.blob (handle: handle, size: size)
             self.content = data
             return data
         } else {

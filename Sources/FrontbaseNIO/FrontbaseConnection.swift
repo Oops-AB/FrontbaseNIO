@@ -128,10 +128,12 @@ public final class FrontbaseConnection {
                 promise.fail (FrontbaseError (reason: .error, message: "Could not open database: \(storage)"))
             } else {
                 let result = withUnsafeMutablePointer (to: &errorMessage) { (errorMessagePointer: UnsafeMutablePointer<UnsafePointer<Int8>?>) -> FBSResult? in
-                    return fbsExecuteSQL (connection, sessionMode.sql, true, errorMessagePointer)
+                    return fbsExecuteSQL (connection!, sessionMode.sql, true, errorMessagePointer)
                 }
                 defer {
-                    fbsCloseResult (result)
+                    if let result {
+                        fbsCloseResult (result)
+                    }
                 }
 
                 if let message = errorMessage {
@@ -249,13 +251,23 @@ public final class FrontbaseConnection {
         return promise.futureResult
     }
 
-    internal func blob (handle: String, size: UInt32) -> Data {
-        return Data (bytes: fbsGetBlobData (databaseConnection, handle), count: Int (size))
+    internal func blob (handle: String, size: UInt32) throws -> Data {
+        guard let databaseConnection else {
+            throw BlobError.noConnection
+        }
+        let bytes = fbsGetBlobData (databaseConnection, handle)
+        let data = Data (bytes: bytes, count: Int (size))
+
+        fbsReleaseBlobData (bytes)
+
+        return data
     }
 
     internal func blob (data: Data) throws -> (String, FBSBlob) {
         return try data.withUnsafeBytes { bytes in
-            if let blobHandle = fbsCreateBlobHandle (bytes.baseAddress, UInt32 (data.count), self.databaseConnection) {
+            if let connection = self.databaseConnection,
+               let baseAddress = bytes.baseAddress,
+               let blobHandle = fbsCreateBlobHandle (baseAddress, UInt32 (data.count), connection) {
                 let handleString = String (cString: fbsGetBlobHandleString (blobHandle))
 
                 return (handleString, blobHandle)

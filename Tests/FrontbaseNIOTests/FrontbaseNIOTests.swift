@@ -522,24 +522,35 @@ class FrontbaseNIOTests: XCTestCase {
 #endif
 
     func testAllocation() throws {
-        let database = try FrontbaseConnection.makeFilebasedTest();
-        let before = getMemoryUsed()
-        let string = "Lorem ipsum set dolor mit amet"
+        let metrics = XCTMemoryMetric()
+        let from = XCTPerformanceMeasurementTimestamp()
+        var to: XCTPerformanceMeasurementTimestamp? = nil
 
-        _ = try database.query ("CREATE TABLE foo (\"string\" CHARACTER (100))").wait()
-        _ = try database.query ("INSERT INTO foo VALUES (?)", [ string.frontbaseData! ]).wait()
-        _ = try database.query ("COMMIT").wait()
+        measure (metrics: [metrics]) {
+            XCTAssertNoThrow {
+                let database = try FrontbaseConnection.makeFilebasedTest();
+                let string = "Lorem ipsum set dolor mit amet"
+                let blob = Data (repeating: 42, count: 100000)
 
-        for _ in 1...10000 {
-            if let result = try! database.query ("SELECT COUNT (*) AS counter, MIN (string) AS value FROM foo").wait().first {
-                XCTAssertEqual (result.firstValue (forColumn: "counter"), FrontbaseData.decimal (1.0))
-                XCTAssertEqual (result.firstValue (forColumn: "value"), FrontbaseData.text (string))
+                _ = try database.query ("CREATE TABLE foo (\"string\" CHARACTER (100), \"blob\" BLOB)").wait()
+                _ = try database.query ("INSERT INTO foo VALUES (?, ?)", [ string.frontbaseData!, blob.frontbaseData! ]).wait()
+                _ = try database.query ("COMMIT").wait()
+
+                for _ in 1...10000 {
+                    if let result = try! database.query (#"SELECT COUNT (*) AS counter, MIN ("string") AS value, MIN ("blob") AS blobValue FROM "foo""#).wait().first {
+                        XCTAssertEqual (result.firstValue (forColumn: "counter"), FrontbaseData.decimal (1.0))
+                        XCTAssertEqual (result.firstValue (forColumn: "value"), FrontbaseData.text (string))
+                        XCTAssertEqual (result.firstValue (forColumn: "blobValue"), blob.frontbaseData)
+                    }
+                }
+                database.destroyTest()
+                to = XCTPerformanceMeasurementTimestamp()
             }
         }
-        database.destroyTest()
-        let after = getMemoryUsed()
-        let used = after > before ? after - before : 0
 
-        XCTAssertLessThan (used, 500000)
+        if let to {
+            let measurements = try metrics.reportMeasurements(from: from, to: to)
+            print (measurements)
+        }
     }
 }

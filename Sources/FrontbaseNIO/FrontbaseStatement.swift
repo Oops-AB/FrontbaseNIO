@@ -115,7 +115,7 @@ internal class FrontbaseStatement {
         }
         var errorMessage: UnsafePointer<Int8>? = nil
         let resultSet: FBSResult? = withUnsafeMutablePointer (to: &errorMessage) { errorMessagePointer in
-            return fbsExecuteSQL (connection.databaseConnection, sql + ";", connection.autoCommit, errorMessagePointer)
+            return fbsExecuteSQL (connection.databaseConnection!, sql + ";", connection.autoCommit, errorMessagePointer)
         }
 
         if let message = errorMessage {
@@ -126,7 +126,8 @@ internal class FrontbaseStatement {
     }
 
     internal func nextRow() throws -> FrontbaseRow? {
-        if let row = fbsFetchRow (resultSet) {
+        if let resultSet,
+           let row = fbsFetchRow (resultSet) {
             let count = fbsGetColumnCount (resultSet)
             var columnData: [FrontbaseColumn: FrontbaseData] = [:]
 
@@ -136,7 +137,7 @@ internal class FrontbaseStatement {
                 let labelName = String (cString: info.labelName)
                 let column = FrontbaseColumn (table: tableName == "_NA" ? nil : tableName, name: labelName)
 
-                columnData[column] = try FrontbaseData.retrieve (from: row, at: columnIndex, columnInfo: info, statement: self, resultSet: resultSet!)
+                columnData[column] = try FrontbaseData.retrieve (from: row, at: columnIndex, columnInfo: info, statement: self, resultSet: resultSet)
             }
 
             fbsReleaseRow (row)
@@ -160,6 +161,10 @@ internal class FrontbaseStatement {
     }
 
     internal func structure() throws -> [StructureColumn] {
+        guard let resultSet else {
+            return []
+        }
+
         let count = fbsGetColumnCount (resultSet)
         var columns: [StructureColumn] = []
 
@@ -279,4 +284,5 @@ enum ParseError: Error {
 
 enum BlobError: Error {
     case createFailed
+    case noConnection
 }

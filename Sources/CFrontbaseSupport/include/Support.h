@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <FBCAccess/FBCAccess.h>
+#include <os/base.h>
+
+OS_ASSUME_NONNULL_BEGIN
 
 typedef void* FBSConnection;
 typedef void* FBSResult;
@@ -50,26 +53,26 @@ typedef struct FBSColumnInfo {
 /// Open a connection, and create a session.
 /// Any returned FBSConnection MUST be deallocated using fbsCloseConnection().
 /// If NULL is returned, *errorMessage will contain a message.
-FBSConnection fbsConnectDatabaseOnHost (const char* databaseName,
-										const char* hostName,
-										const char* databasePassword,
-										const char* username,
-										const char* password,
-                                        const char* defaultSessionName,
-                                        const char* operatingSystemUser,
-										const char** errorMessage);
+FBSConnection _Nullable fbsConnectDatabaseOnHost (const char* databaseName,
+                                                  const char* hostName,
+                                                  const char* _Nullable databasePassword,
+                                                  const char* username,
+                                                  const char* password,
+                                                  const char* defaultSessionName,
+                                                  const char* operatingSystemUser,
+                                                  const char* _Nullable * _Nullable errorMessage);
 
 /// Open a connection to a local database file, and create a session.
 /// Any returned FBSConnection MUST be deallocated using fbsClose().
 /// If NULL is returned, *errorMessage will contain a message.
-FBSConnection fbsConnectDatabaseAtPath (const char* databaseName,
-										const char* pathName,
-										const char* databasePassword,
-										const char* username,
-										const char* password,
-                                        const char* defaultSessionName,
-                                        const char* operatingSystemUser,
-										const char** errorMessage);
+FBSConnection _Nullable fbsConnectDatabaseAtPath (const char* databaseName,
+                                                  const char* pathName,
+                                                  const char* _Nullable databasePassword,
+                                                  const char* username,
+                                                  const char* password,
+                                                  const char* defaultSessionName,
+                                                  const char* operatingSystemUser,
+                                                  const char* _Nullable * _Nullable errorMessage);
 
 /// Close database connection, and deallocate data structures.
 void fbsCloseConnection (FBSConnection connection);
@@ -93,10 +96,10 @@ const char* fbsErrorMessage (FBSConnection connection);
 /// Execute SQL
 /// Any returned FBSResult MUST be deallocated using fbsCloseResult().
 /// If NULL is returned, *errorMessage will contain a message.
-FBSResult fbsExecuteSQL (FBSConnection connection,
-                         const char* sql,
-                         bool autoCommit,
-                         const char** errorMessage);
+FBSResult _Nullable fbsExecuteSQL (FBSConnection connection,
+                                   const char* sql,
+                                   bool autoCommit,
+                                   const char* _Nullable * _Nullable errorMessage);
 
 /// Close result set, and deallocate data structures.
 void fbsCloseResult (FBSResult result);
@@ -104,7 +107,7 @@ void fbsCloseResult (FBSResult result);
 /// Fetch a row from a result set
 /// Any returned FBSRow MUST be deallocated using fbsReleaseRow().
 /// If NULL is returned, there are no more rows to fetch.
-FBSRow fbsFetchRow (FBSResult result);
+FBSRow _Nullable fbsFetchRow (FBSResult result);
 
 /// Release result row, and deallocate data structures.
 void fbsReleaseRow (FBSRow row);
@@ -214,16 +217,21 @@ const unsigned char* fbsGetAnyTypeBitBytes (FBSRow row, unsigned column);
 /// Return blob data from a blob handle
 const void* fbsGetBlobData (FBSConnection connection, const char* handleString);
 
-/// Create a blob handle from data
-FBSBlob fbsCreateBlobHandle (const void* data, unsigned size, FBSConnection connection);
+/// Release blob data returned from `fbsGetBlobData`
+void fbsReleaseBlobData (const void* data);
 
-/// Get handel string from blob handle
+/// Create a blob handle from data
+FBSBlob _Nullable fbsCreateBlobHandle (const void* data, unsigned size, FBSConnection connection);
+
+/// Get handlestring from blob handle
 const char* fbsGetBlobHandleString (FBSBlob blob);
 
 /// Release a blob handle
 void fbsReleaseBlobHandle (FBSBlob blob);
 
 /// Fetch message from a result set
-const char* fbsFetchMessage (FBSResult result);
+const char* _Nullable fbsFetchMessage (FBSResult _Nullable result);
+
+OS_ASSUME_NONNULL_END
 
 #endif

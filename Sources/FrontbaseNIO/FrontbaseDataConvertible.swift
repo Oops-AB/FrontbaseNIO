@@ -15,7 +15,10 @@ extension Data: FrontbaseDataConvertible {
         guard case .blob (let blob) = frontbaseData else {
             return nil
         }
-        self = blob.data()
+        guard let data = try? blob.data() else {
+            return nil
+        }
+        self = data
     }
     
     /// See `FrontbaseDataConvertible.frontbaseData`.
@@ -51,7 +54,9 @@ extension UUID: FrontbaseDataConvertible {
                         return nil
                 }
             case .blob (let blob):
-                let data = blob.data()
+                guard let data = try? blob.data() else {
+                    return nil
+                }
                 guard data.count == 16 else {
                     return nil
                 }

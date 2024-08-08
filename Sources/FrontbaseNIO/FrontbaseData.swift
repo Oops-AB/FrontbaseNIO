@@ -145,19 +145,15 @@ public enum FrontbaseData: Equatable, Encodable {
 
                 case FBS_CLOB:
                     var size: UInt32 = UInt32.max
-                    if let handle = fbsGetBlobHandle (row, columnIndex, &size) {
-                        return .blob (FrontbaseBlob (handle: String (cString: handle), size: size, connection: statement.connection))
-                    } else {
-                        throw FrontbaseError (reason: .error, message: "No CLOB handle returned.")
-                    }
+                    let handle = fbsGetBlobHandle (row, columnIndex, &size)
+
+                    return .blob (FrontbaseBlob (handle: String (cString: handle), size: size, connection: statement.connection))
 
                 case FBS_BLOB:
                     var size: UInt32 = UInt32.max
-                    if let handle = fbsGetBlobHandle (row, columnIndex, &size) {
-                        return .blob (FrontbaseBlob (handle: String (cString: handle), size: size, connection: statement.connection))
-                    } else {
-                        throw FrontbaseError (reason: .error, message: "No BLOB handle returned.")
-                    }
+                    let handle = fbsGetBlobHandle (row, columnIndex, &size)
+
+                    return .blob (FrontbaseBlob (handle: String (cString: handle), size: size, connection: statement.connection))
 
                 case FBS_TinyInteger:
                     return .integer (fbsGetTinyInteger (row, columnIndex))
@@ -253,19 +249,15 @@ public enum FrontbaseData: Equatable, Encodable {
 
                 case FBS_CLOB:
                     var size: UInt32 = UInt32.max
-                    if let handle = fbsGetAnyTypeBlobHandle (row, columnIndex, &size) {
-                        return .blob (FrontbaseBlob (handle: String (cString: handle), size: size, connection: statement.connection))
-                    } else {
-                        throw FrontbaseError (reason: .error, message: "No CLOB handle returned.")
-                    }
+                    let handle = fbsGetAnyTypeBlobHandle (row, columnIndex, &size)
+
+                    return .blob (FrontbaseBlob (handle: String (cString: handle), size: size, connection: statement.connection))
 
                 case FBS_BLOB:
                     var size: UInt32 = UInt32.max
-                    if let handle = fbsGetAnyTypeBlobHandle (row, columnIndex, &size) {
-                        return .blob (FrontbaseBlob (handle: String (cString: handle), size: size, connection: statement.connection))
-                    } else {
-                        throw FrontbaseError (reason: .error, message: "No BLOB handle returned.")
-                    }
+                    let handle = fbsGetAnyTypeBlobHandle (row, columnIndex, &size)
+
+                    return .blob (FrontbaseBlob (handle: String (cString: handle), size: size, connection: statement.connection))
 
                 case FBS_TinyInteger:
                     return .integer (fbsGetAnyTypeTinyInteger (row, columnIndex))

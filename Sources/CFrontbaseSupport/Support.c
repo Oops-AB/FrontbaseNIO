@@ -604,6 +604,11 @@ const void* fbsGetBlobData (FBSConnection connection, const char* handleString) 
 	return data;
 }
 
+/// Release blob data returned from `fbsGetBlobData`
+void fbsReleaseBlobData (const void* _Nonnull data) {
+    fbcdcReleaseLOB ((void*)data);
+}
+
 /// Create a blob handle from data
 FBSBlob fbsCreateBlobHandle (const void* data, unsigned size, FBSConnection connection) {
 	FBCDatabaseConnection* databaseConnection = connection;
