@@ -4,9 +4,10 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <FBCAccess/FBCAccess.h>
-#include <os/base.h>
 
-OS_ASSUME_NONNULL_BEGIN
+#if __has_feature(assume_nonnull)
+#pragma clang assume_nonnull begin
+#endif
 
 typedef void* FBSConnection;
 typedef void* FBSResult;
@@ -232,6 +233,8 @@ void fbsReleaseBlobHandle (FBSBlob blob);
 /// Fetch message from a result set
 const char* _Nullable fbsFetchMessage (FBSResult _Nullable result);
 
-OS_ASSUME_NONNULL_END
+#if __has_feature(assume_nonnull)
+#pragma clang assume_nonnull end
+#endif
 
 #endif
