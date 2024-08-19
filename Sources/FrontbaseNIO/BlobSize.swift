@@ -5,12 +5,14 @@
 
 import Foundation
 
-struct BlobSize {
-    let size: UInt32
+public struct BlobSize {
+    public let size: UInt32
 }
 
+extension BlobSize: Decodable {}
+
 extension BlobSize: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         return size.description
     }
 }
