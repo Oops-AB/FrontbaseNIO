@@ -215,6 +215,8 @@ class FrontbaseNIOTests: XCTestCase {
 
         if let result = try database.query ("SELECT * FROM foo").wait().first {
             XCTAssertEqual (result.firstValue (forColumn: "bar")?.blobData, data)
+            XCTAssertEqual (Data (frontbaseData: result.firstValue (forColumn: "bar")!), data)
+            XCTAssertEqual (BlobSize (frontbaseData: result.firstValue (forColumn: "bar")!)?.size, 3)
         } else {
             XCTFail()
         }

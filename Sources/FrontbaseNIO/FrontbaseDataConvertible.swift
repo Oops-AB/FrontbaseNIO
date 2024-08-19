@@ -27,6 +27,24 @@ extension Data: FrontbaseDataConvertible {
     }
 }
 
+extension BlobSize: FrontbaseDataConvertible {
+    /// See `FrontbaseDataConvertible.init?(:)`
+    public init? (frontbaseData: FrontbaseData) {
+        guard case .blob (let blob) = frontbaseData else {
+            return nil
+        }
+        guard let size = blob.size else {
+            return nil
+        }
+        self.size = size
+    }
+
+    /// See `FrontbaseDataConvertible.frontbaseData`.
+    public var frontbaseData: FrontbaseData? {
+        return nil
+    }
+}
+
 extension UUID: FrontbaseDataConvertible {
     /// See `FrontbaseDataConvertible.init?(:)`
     public init? (frontbaseData: FrontbaseData) {
