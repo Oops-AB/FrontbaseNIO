@@ -63,7 +63,7 @@ public final class FrontbaseConnection {
     }
 
     public let eventLoop: EventLoop
-    internal let storage: Storage
+    public let storage: Storage
     internal var databaseConnection: FBSConnection?
     internal let threadPool: NIOThreadPool
     internal let connectionLogger: Logger
