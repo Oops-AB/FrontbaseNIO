@@ -357,8 +357,23 @@ extension Bit96: Equatable {
     }
 }
 
-extension Bit96: Sendable {
-    init() {
+extension Bit96: Sendable, Hashable {
+    public init() {
         self.init (bits: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+    }
+
+    public func hash (into hasher: inout Hasher) {
+        bits.0.hash (into: &hasher)
+        bits.1.hash (into: &hasher)
+        bits.2.hash (into: &hasher)
+        bits.3.hash (into: &hasher)
+        bits.4.hash (into: &hasher)
+        bits.5.hash (into: &hasher)
+        bits.6.hash (into: &hasher)
+        bits.7.hash (into: &hasher)
+        bits.8.hash (into: &hasher)
+        bits.9.hash (into: &hasher)
+        bits.10.hash (into: &hasher)
+        bits.11.hash (into: &hasher)
     }
 }
