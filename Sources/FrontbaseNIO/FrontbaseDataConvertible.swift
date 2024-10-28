@@ -355,6 +355,10 @@ extension Bit96: Equatable {
                (left5 == right5) && (left6 == right6) && (left7 == right7) && (left8 == right8) &&
                (left9 == right9) && (left10 == right10) && (left11 == right11) && (left12 == right12)
     }
-    
-    
+}
+
+extension Bit96: Sendable {
+    init() {
+        self.init (bits: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+    }
 }
