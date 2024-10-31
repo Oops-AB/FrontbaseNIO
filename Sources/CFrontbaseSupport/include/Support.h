@@ -51,11 +51,23 @@ typedef struct FBSColumnInfo {
     bool isNullable;
 } FBSColumnInfo;
 
-/// Open a connection, and create a session.
+/// Open a connection through FBExec on a host, and create a session.
 /// Any returned FBSConnection MUST be deallocated using fbsCloseConnection().
 /// If NULL is returned, *errorMessage will contain a message.
 FBSConnection _Nullable fbsConnectDatabaseOnHost (const char* databaseName,
                                                   const char* hostName,
+                                                  const char* _Nullable databasePassword,
+                                                  const char* username,
+                                                  const char* password,
+                                                  const char* defaultSessionName,
+                                                  const char* operatingSystemUser,
+                                                  const char* _Nullable * _Nullable errorMessage);
+
+/// Open a connection at a port on a host, and create a session.
+/// Any returned FBSConnection MUST be deallocated using fbsCloseConnection().
+/// If NULL is returned, *errorMessage will contain a message.
+FBSConnection _Nullable fbsConnectDatabaseOnPort (const char* hostName,
+                                                  unsigned port,
                                                   const char* _Nullable databasePassword,
                                                   const char* username,
                                                   const char* password,

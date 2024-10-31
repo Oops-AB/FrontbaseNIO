@@ -66,7 +66,10 @@ extension FrontbaseConnection {
             case .named (let name, let hostName, _, _, _, _):
                 fbsDeleteDatabaseWithUrl ("frontbase://\(hostName)/\(name)")
 
-            case.file (_, let pathName, _, _, _, _):
+            case .port (let hostName, let port, _, _, _, _):
+                fbsDeleteDatabaseWithUrl ("frontbase://\(hostName):\(port)")
+
+            case .file (_, let pathName, _, _, _, _):
                 if let endIndex = pathName.lastIndex (of: "/") {
                     let path = String (pathName[pathName.startIndex ..< endIndex])
                     do {

@@ -77,6 +77,72 @@ FBSConnection fbsConnectDatabaseOnHost (const char* databaseName,
 	}
 }
 
+/// Open a connection at a port on a host, and create a session.
+/// Any returned FBSConnection MUST be deallocated using fbsClose().
+/// If NULL is returned, *errorMessage will contain a message.
+FBSConnection fbsConnectDatabaseOnPort (const char* hostName,
+                                        unsigned port,
+                                        const char* databasePassword,
+										const char* username,
+										const char* password,
+                                        const char* defaultSessionName,
+                                        const char* operatingSystemUser,
+										const char** errorMessage) {
+	const char* localError = NULL;
+	char digest[1000];
+	FBCDatabaseConnection* connection = fbcdcConnectToDatabaseUsingPortRM (hostName, port, digestPassword ("_SYSTEM", databasePassword, digest), &localError);
+	FBCMetaData* session;
+	FBCErrorMetaData* errorMetaData;
+
+	if (connection == NULL) {
+		if (errorMessage != NULL) {
+			*errorMessage = localError;
+		}
+		return NULL;
+	}
+
+	session = fbcdcCreateSession (connection, defaultSessionName, username, digestPassword (username, password, digest), operatingSystemUser);
+
+	if (session == NULL) {
+		fbcdcClose (connection);
+		fbcdcRelease (connection);
+
+		return NULL;
+	} else if (fbcmdErrorsFound (session)) {
+		if (errorMessage != NULL) {
+			errorMetaData = fbcmdErrorMetaData (session);
+			*errorMessage = fbcemdAllErrorMessages (errorMetaData);
+			fbcemdRelease (errorMetaData);
+		}
+
+		fbcmdRelease (session);
+		fbcdcClose (connection);
+		fbcdcRelease (connection);
+
+		return NULL;
+	} else {
+        fbcdcSetFormatResult (connection, 0);
+
+        const char* timeZoneMessage = NULL;
+
+        FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage);
+
+        if (result == NULL) {
+            if (errorMessage != NULL) {
+                *errorMessage = timeZoneMessage;
+            }
+
+            fbcmdRelease (session);
+            fbcdcClose (connection);
+            fbcdcRelease (connection);
+
+            return NULL;
+        }
+
+		return fbcdcRetain (connection);
+	}
+}
+
 /// Open a connection to a local database file, and create a session.
 /// Any returned FBSConnection MUST be deallocated using fbsClose().
 /// If NULL is returned, *errorMessage will contain a message.

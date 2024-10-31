@@ -24,6 +24,9 @@ public final class FrontbaseConnection {
         /// Named database, connected via FBExec
         case named (name: String, hostName: String, username: String, password: String, databasePassword: String? = nil, mode: SessionMode = .serializable (.pessimistic, .readWrite))
 
+        /// Networked database, connected via port
+        case port (hostName: String, port: UInt32, username: String, password: String, databasePassword: String? = nil, mode: SessionMode = .serializable (.pessimistic, .readWrite))
+
         /// File-based database, only supporting one simultaneous connection.
         case file (name: String, pathName: String, username: String, password: String, databasePassword: String? = nil, mode: SessionMode = .serializable (.pessimistic, .readWrite))
     }
@@ -98,6 +101,19 @@ public final class FrontbaseConnection {
                     sessionMode = mode
                     return fbsConnectDatabaseOnHost (databaseName,
                                                      hostName,
+                                                     databasePassword,
+                                                     username.uppercased(),
+                                                     password,
+                                                     sessionName,
+                                                     systemUser,
+                                                     errorMessagePointer)
+                }
+
+            case .port (let hostName, let port, let username, let password, let databasePassword, let mode):
+                connection = withUnsafeMutablePointer (to: &errorMessage) { (errorMessagePointer: UnsafeMutablePointer<UnsafePointer<Int8>?>) -> FBSConnection? in
+                    sessionMode = mode
+                    return fbsConnectDatabaseOnPort (hostName,
+                                                     port,
                                                      databasePassword,
                                                      username.uppercased(),
                                                      password,
