@@ -1,6 +1,7 @@
 #include "Support.h"
 #include <string.h>
 #include <sys/stat.h>
+#include <stdlib.h> // for malloc()
 
 // Internal
 const char* digestPassword (const char* username, const char* password, char* digest) {
@@ -9,6 +10,37 @@ const char* digestPassword (const char* username, const char* password, char* di
 	} else {
 		return fbcDigestPassword (username, password, digest);
 	}
+}
+
+/// Return a copy of all error messages associated with `md`, or `NULL` if there are none.
+/// The caller must free the returned string.
+/// The rationale for this function is this note from the meastro:
+///   "You should always use fbcemdReleaseMessage on the result from fbcemdAllErrorMessages"
+static char *_fbcCopyAllMessages(FBCMetaData *md) {
+	if (!fbcmdErrorsFound(md)) return NULL;
+
+	FBCErrorMetaData *emd = fbcmdErrorMetaData(md);
+	char *allMessages = NULL;
+	char *copy = NULL;
+
+	if ((allMessages = fbcemdAllErrorMessages(emd)) != NULL) {
+		copy = (char *)malloc(strlen(allMessages));
+		fbcemdReleaseMessage(allMessages);
+	}
+
+	fbcemdRelease(emd);
+
+	return copy;
+}
+
+/// Return a copy of the NULL terminated string `msg`.
+/// The caller is responsible for freeing the copy.
+static char *_fbcCopyError(const char *msg) {
+	unsigned long len = strlen(msg);
+	char *copy = (char *)malloc(len + 1);
+	memcpy(copy, msg, len);
+	copy[len] = 0;
+	return copy;
 }
 
 /// Open a connection through FBExec on a host, and create a session.
@@ -156,57 +188,49 @@ FBSConnection fbsConnectDatabaseAtPath (const char* databaseName,
 										const char** errorMessage) {
 	const char* localError = NULL;
 	char digest[1000];
-	FBCDatabaseConnection* connection = fbcdcConnectToPathRM (databaseName, filePath, digestPassword ("_SYSTEM", databasePassword, digest), &localError);
-	FBCMetaData* session;
-	FBCErrorMetaData* errorMetaData;
+	char url[1025];
 
-	if (connection == NULL) {
+	int n = snprintf(url, 1025, "file://%s", filePath);
+	if (n >= 1025) {
 		if (errorMessage != NULL) {
-			*errorMessage = localError;
+			*errorMessage = _fbcCopyError("path too long");
 		}
 		return NULL;
 	}
 
-	session = fbcdcCreateSession (connection, defaultSessionName, username, digestPassword (username, password, digest), operatingSystemUser);
+	FBCMetaData *md = fbcdcConnectToURL(url, digestPassword ("_SYSTEM", databasePassword, digest), username, digestPassword (username, password, digest),defaultSessionName);
 
-	if (session == NULL) {
-		fbcdcClose (connection);
-		fbcdcRelease (connection);
-
-		return NULL;
-	} else if (fbcmdErrorsFound (session)) {
+	if (fbcmdErrorsFound(md)) {
 		if (errorMessage != NULL) {
-			errorMetaData = fbcmdErrorMetaData (session);
-			*errorMessage = fbcemdAllErrorMessages (errorMetaData);
-			fbcemdRelease (errorMetaData);
+			*errorMessage = _fbcCopyAllMessages(md);
 		}
 
-		fbcmdRelease (session);
+		fbcmdRelease(md);
+		return NULL;
+	}
+
+	FBCDatabaseConnection *connection = fbcdcRetain(fbcmdDatabaseConnection(md));
+	fbcmdRelease(md);
+	md = NULL;
+
+	fbcdcSetFormatResult (connection, 0);
+
+	const char* timeZoneMessage = NULL;
+
+	FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage);
+
+	if (result == NULL) {
+		if (errorMessage != NULL) {
+			*errorMessage = timeZoneMessage;
+		}
+
 		fbcdcClose (connection);
 		fbcdcRelease (connection);
 
 		return NULL;
-	} else {
-        fbcdcSetFormatResult (connection, 0);
-
-        const char* timeZoneMessage = NULL;
-
-        FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage);
-
-        if (result == NULL) {
-            if (errorMessage != NULL) {
-                *errorMessage = timeZoneMessage;
-            }
-
-            fbcmdRelease (session);
-            fbcdcClose (connection);
-            fbcdcRelease (connection);
-
-            return NULL;
-        }
-
-		return fbcdcRetain (connection);
 	}
+
+	return connection;
 }
 
 /// Close database connection, and deallocate data structures.
@@ -258,13 +282,10 @@ FBSResult fbsExecuteSQL (FBSConnection connection,
                          const char** errorMessage) {
 	FBCDatabaseConnection* databaseConnection = connection;
     FBCMetaData* metadata = fbcdcExecuteSQL (databaseConnection, (char*)sql, (unsigned int)strlen (sql), autoCommit ? FBCDCCommit : 0);
-	FBCErrorMetaData* errorMetaData;
 
 	if (fbcmdErrorsFound (metadata)) {
 		if (errorMessage != NULL) {
-			errorMetaData = fbcmdErrorMetaData (metadata);
-			*errorMessage = fbcemdAllErrorMessages (errorMetaData);
-			fbcemdRelease (errorMetaData);
+			*errorMessage = _fbcCopyAllMessages(metadata);
 		}
 
 		fbcmdRelease (metadata);
