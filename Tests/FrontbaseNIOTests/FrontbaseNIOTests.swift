@@ -549,4 +549,36 @@ class FrontbaseNIOTests: XCTestCase {
             }
         }
     }
+
+    func testErrorMessageAllocation() throws {
+        let metrics = XCTMemoryMetric()
+
+        var sql = "SELECT * FROM foo;"
+        for _ in 1...100 {
+            sql.append("\nSELECT * FROM foo;")
+        }
+        sql.append("\nSELECT * FRIM foo;")
+
+        measure (metrics: [metrics]) {
+            do {
+                startMeasuring()
+                let database = try FrontbaseConnection.makeFilebasedTest();
+                _ = try database.query ("CREATE TABLE foo (\"string\" CHARACTER (100))").wait()
+                _ = try database.query ("COMMIT;").wait()
+
+                for _ in 1...10000 {
+                    do {
+                        let _ = try database.query(sql).wait()
+                    } catch {
+                        continue
+                    }
+
+                    XCTFail("expected DB query error")
+                }
+                database.destroyTest()
+            } catch {
+                XCTFail("\(error)")
+            }
+        }
+    }
 }

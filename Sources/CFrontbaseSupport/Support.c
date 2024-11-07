@@ -4,6 +4,9 @@
 #include <stdlib.h> // for malloc()
 
 // Internal
+static char *_fbcCopyAllMessages(FBCMetaData*);
+static char *_fbcCopyError(const char *);
+
 const char* digestPassword (const char* username, const char* password, char* digest) {
 	if (password == NULL) {
 		return NULL;
@@ -24,7 +27,7 @@ static char *_fbcCopyAllMessages(FBCMetaData *md) {
 	char *copy = NULL;
 
 	if ((allMessages = fbcemdAllErrorMessages(emd)) != NULL) {
-		copy = (char *)malloc(strlen(allMessages));
+        copy = _fbcCopyError(allMessages);
 		fbcemdReleaseMessage(allMessages);
 	}
 
