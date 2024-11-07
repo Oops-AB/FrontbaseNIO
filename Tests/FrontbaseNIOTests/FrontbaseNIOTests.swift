@@ -2,6 +2,7 @@
 import NIO
 import XCTest
 import MemoryTools
+import Logging
 
 class FrontbaseNIOTests: XCTestCase {
 
@@ -369,6 +370,43 @@ class FrontbaseNIOTests: XCTestCase {
             .wait()
         XCTAssertEqual (foo.first!.firstValue (forColumn: "string"), FrontbaseData.text (string1))
         XCTAssertEqual (bar.first!.firstValue (forColumn: "string"), FrontbaseData.text (string2))
+    }
+
+    func testMultiThreadingFileBased() throws {
+        let elg = MultiThreadedEventLoopGroup (numberOfThreads: 2)
+        let threadPool = NIOThreadPool (numberOfThreads: 2)
+        let storage = FrontbaseConnection.Storage.file (name: "FrontbaseTests", pathName: try FrontbaseConnection.temporaryDirectory (template: "/tmp/FrontbaseTests-XXXXXXXXXX") + "/database.fb", username: "_system", password: "", databasePassword: "")
+        let logger = Logger (label: "FrontbaseTests")
+
+        let conn = try FrontbaseConnection.open (storage: storage, threadPool: threadPool, logger: logger, on: elg.next()).wait()
+        defer {
+            conn.destroyTest()
+        }
+
+        let group = DispatchGroup()
+        group.enter()
+        DispatchQueue.global().async {
+            let conn = try! FrontbaseConnection.open (storage: storage, threadPool: threadPool, logger: logger, on: elg.next()).wait()
+            for i in 0 ..< 100 {
+                print ("a \(i)")
+                let res = try! conn.query("VALUES (1 + 1);").wait()
+                print (res)
+            }
+            let _ = conn.close()
+            group.leave()
+        }
+        group.enter()
+        DispatchQueue.global().async {
+            let conn = try! FrontbaseConnection.open (storage: storage, threadPool: threadPool, logger: logger, on: elg.next()).wait()
+            for i in 0 ..< 100 {
+                print ("b \(i)")
+                let res = try! conn.query("VALUES (1 + 1);").wait()
+                print (res)
+            }
+            let _ = conn.close()
+            group.leave()
+        }
+        group.wait()
     }
 
     func testAnyType() throws {
