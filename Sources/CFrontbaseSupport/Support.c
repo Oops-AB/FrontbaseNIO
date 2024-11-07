@@ -18,7 +18,7 @@ FBSConnection fbsConnectDatabaseOnHost (const char* databaseName,
 										const char* password,
                                         const char* defaultSessionName,
                                         const char* operatingSystemUser,
-										const char** errorMessage) {
+										char** errorMessage) {
 	const char* localError = NULL;
 	char digest[1000];
 	FBCDatabaseConnection* connection = fbcdcConnectToDatabaseRM (databaseName, hostName, _fbsDigestPassword ("_SYSTEM", databasePassword, digest), &localError);
@@ -51,7 +51,7 @@ FBSConnection fbsConnectDatabaseOnHost (const char* databaseName,
 	} else {
         fbcdcSetFormatResult (connection, 0);
 
-        const char* timeZoneMessage = NULL;
+        char* timeZoneMessage = NULL;
 
         FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage);
 
@@ -81,7 +81,7 @@ FBSConnection fbsConnectDatabaseOnPort (const char* hostName,
 										const char* password,
                                         const char* defaultSessionName,
                                         const char* operatingSystemUser,
-										const char** errorMessage) {
+										char** errorMessage) {
 	const char* localError = NULL;
 	char digest[1000];
 	FBCDatabaseConnection* connection = fbcdcConnectToDatabaseUsingPortRM (hostName, port, _fbsDigestPassword ("_SYSTEM", databasePassword, digest), &localError);
@@ -114,7 +114,7 @@ FBSConnection fbsConnectDatabaseOnPort (const char* hostName,
 	} else {
         fbcdcSetFormatResult (connection, 0);
 
-        const char* timeZoneMessage = NULL;
+        char* timeZoneMessage = NULL;
 
         FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage);
 
@@ -144,7 +144,7 @@ FBSConnection fbsConnectDatabaseAtPath (const char* databaseName,
 										const char* password,
                                         const char* defaultSessionName,
                                         const char* operatingSystemUser,
-										const char** errorMessage) {
+										char** errorMessage) {
 	const char* localError = NULL;
 	char digest[1000];
 	char url[1025];
@@ -174,7 +174,7 @@ FBSConnection fbsConnectDatabaseAtPath (const char* databaseName,
 
 	fbcdcSetFormatResult (connection, 0);
 
-	const char* timeZoneMessage = NULL;
+	char* timeZoneMessage = NULL;
 
 	FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage);
 
@@ -238,7 +238,7 @@ const char* fbsErrorMessage (FBSConnection connection) {
 FBSResult fbsExecuteSQL (FBSConnection connection,
                          const char* sql,
                          bool autoCommit,
-                         const char** errorMessage) {
+                         char** errorMessage) {
 	FBCDatabaseConnection* databaseConnection = connection;
     FBCMetaData* metadata = fbcdcExecuteSQL (databaseConnection, (char*)sql, (unsigned int)strlen (sql), autoCommit ? FBCDCCommit : 0);
 

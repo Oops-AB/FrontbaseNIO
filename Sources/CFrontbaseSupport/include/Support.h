@@ -61,7 +61,7 @@ FBSConnection _Nullable fbsConnectDatabaseOnHost (const char* databaseName,
                                                   const char* password,
                                                   const char* defaultSessionName,
                                                   const char* operatingSystemUser,
-                                                  const char* _Nullable * _Nullable errorMessage);
+                                                  char* _Nullable * _Nullable errorMessage);
 
 /// Open a connection at a port on a host, and create a session.
 /// Any returned FBSConnection MUST be deallocated using fbsCloseConnection().
@@ -73,7 +73,7 @@ FBSConnection _Nullable fbsConnectDatabaseOnPort (const char* hostName,
                                                   const char* password,
                                                   const char* defaultSessionName,
                                                   const char* operatingSystemUser,
-                                                  const char* _Nullable * _Nullable errorMessage);
+                                                  char* _Nullable * _Nullable errorMessage);
 
 /// Open a connection to a local database file, and create a session.
 /// Any returned FBSConnection MUST be deallocated using fbsClose().
@@ -85,7 +85,7 @@ FBSConnection _Nullable fbsConnectDatabaseAtPath (const char* databaseName,
                                                   const char* password,
                                                   const char* defaultSessionName,
                                                   const char* operatingSystemUser,
-                                                  const char* _Nullable * _Nullable errorMessage);
+                                                  char* _Nullable * _Nullable errorMessage);
 
 /// Close database connection, and deallocate data structures.
 void fbsCloseConnection (FBSConnection connection);
@@ -112,7 +112,7 @@ const char* fbsErrorMessage (FBSConnection connection);
 FBSResult _Nullable fbsExecuteSQL (FBSConnection connection,
                                    const char* sql,
                                    bool autoCommit,
-                                   const char* _Nullable * _Nullable errorMessage);
+                                   char* _Nullable * _Nullable errorMessage);
 
 /// Close result set, and deallocate data structures.
 void fbsCloseResult (FBSResult result);
