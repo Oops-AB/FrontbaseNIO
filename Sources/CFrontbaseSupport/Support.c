@@ -23,11 +23,10 @@ FBSConnection fbsConnectDatabaseOnHost (const char* databaseName,
 	char digest[1000];
 	FBCDatabaseConnection* connection = fbcdcConnectToDatabaseRM (databaseName, hostName, _fbsDigestPassword ("_SYSTEM", databasePassword, digest), &localError);
 	FBCMetaData* session;
-	FBCErrorMetaData* errorMetaData;
 
 	if (connection == NULL) {
 		if (errorMessage != NULL) {
-			*errorMessage = localError;
+			*errorMessage = _fbsCopyError(localError);
 		}
 		return NULL;
 	}
@@ -41,9 +40,7 @@ FBSConnection fbsConnectDatabaseOnHost (const char* databaseName,
 		return NULL;
 	} else if (fbcmdErrorsFound (session)) {
 		if (errorMessage != NULL) {
-			errorMetaData = fbcmdErrorMetaData (session);
-			*errorMessage = fbcemdAllErrorMessages (errorMetaData);
-			fbcemdRelease (errorMetaData);
+			*errorMessage = _fbsCopyAllMessages (session);
 		}
 
 		fbcmdRelease (session);
@@ -89,11 +86,10 @@ FBSConnection fbsConnectDatabaseOnPort (const char* hostName,
 	char digest[1000];
 	FBCDatabaseConnection* connection = fbcdcConnectToDatabaseUsingPortRM (hostName, port, _fbsDigestPassword ("_SYSTEM", databasePassword, digest), &localError);
 	FBCMetaData* session;
-	FBCErrorMetaData* errorMetaData;
 
 	if (connection == NULL) {
 		if (errorMessage != NULL) {
-			*errorMessage = localError;
+			*errorMessage = _fbsCopyError(localError);
 		}
 		return NULL;
 	}
@@ -107,9 +103,7 @@ FBSConnection fbsConnectDatabaseOnPort (const char* hostName,
 		return NULL;
 	} else if (fbcmdErrorsFound (session)) {
 		if (errorMessage != NULL) {
-			errorMetaData = fbcmdErrorMetaData (session);
-			*errorMessage = fbcemdAllErrorMessages (errorMetaData);
-			fbcemdRelease (errorMetaData);
+			*errorMessage = _fbsCopyAllMessages (session);
 		}
 
 		fbcmdRelease (session);
@@ -700,7 +694,7 @@ const char* fbsFetchMessage (FBSResult result) {
 /// The caller must free the returned string.
 /// The rationale for this function is this note from the meastro:
 ///   "You should always use fbcemdReleaseMessage on the result from fbcemdAllErrorMessages"
-static char *_fbsCopyAllMessages (FBCMetaData* metadata) {
+static char* _fbsCopyAllMessages (FBCMetaData* metadata) {
 	if (!fbcmdErrorsFound (metadata)) return NULL;
 
 	FBCErrorMetaData* emd = fbcmdErrorMetaData (metadata);
