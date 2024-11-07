@@ -525,11 +525,9 @@ class FrontbaseNIOTests: XCTestCase {
 
     func testAllocation() throws {
         let metrics = XCTMemoryMetric()
-        let from = XCTPerformanceMeasurementTimestamp()
-        var to: XCTPerformanceMeasurementTimestamp? = nil
-
         measure (metrics: [metrics]) {
-            XCTAssertNoThrow {
+            do {
+                startMeasuring()
                 let database = try FrontbaseConnection.makeFilebasedTest();
                 let string = "Lorem ipsum set dolor mit amet"
                 let blob = Data (repeating: 42, count: 100000)
@@ -542,17 +540,13 @@ class FrontbaseNIOTests: XCTestCase {
                     if let result = try! database.query (#"SELECT COUNT (*) AS counter, MIN ("string") AS value, MIN ("blob") AS blobValue FROM "foo""#).wait().first {
                         XCTAssertEqual (result.firstValue (forColumn: "counter"), FrontbaseData.decimal (1.0))
                         XCTAssertEqual (result.firstValue (forColumn: "value"), FrontbaseData.text (string))
-                        XCTAssertEqual (result.firstValue (forColumn: "blobValue"), blob.frontbaseData)
+                        XCTAssertEqual (result.firstValue (forColumn: "blobValue")?.blobData, blob)
                     }
                 }
                 database.destroyTest()
-                to = XCTPerformanceMeasurementTimestamp()
+            } catch {
+                XCTFail("\(error)")
             }
-        }
-
-        if let to {
-            let measurements = try metrics.reportMeasurements(from: from, to: to)
-            print (measurements)
         }
     }
 }
