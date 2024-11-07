@@ -4,8 +4,8 @@
 #include <stdlib.h> // for malloc()
 
 // Internal
-static char *_fbcCopyAllMessages(FBCMetaData*);
-static char *_fbcCopyError(const char *);
+static char *_fbsCopyAllMessages (FBCMetaData*);
+static char *_fbsCopyError(const char *);
 
 const char* digestPassword (const char* username, const char* password, char* digest) {
 	if (password == NULL) {
@@ -15,33 +15,33 @@ const char* digestPassword (const char* username, const char* password, char* di
 	}
 }
 
-/// Return a copy of all error messages associated with `md`, or `NULL` if there are none.
+/// Return a copy of all error messages associated with `metadata`, or `NULL` if there are none.
 /// The caller must free the returned string.
 /// The rationale for this function is this note from the meastro:
 ///   "You should always use fbcemdReleaseMessage on the result from fbcemdAllErrorMessages"
-static char *_fbcCopyAllMessages(FBCMetaData *md) {
-	if (!fbcmdErrorsFound(md)) return NULL;
+static char *_fbsCopyAllMessages (FBCMetaData* metadata) {
+	if (!fbcmdErrorsFound (metadata)) return NULL;
 
-	FBCErrorMetaData *emd = fbcmdErrorMetaData(md);
-	char *allMessages = NULL;
-	char *copy = NULL;
+	FBCErrorMetaData* emd = fbcmdErrorMetaData (metadata);
+	char* allMessages = NULL;
+	char* copy = NULL;
 
-	if ((allMessages = fbcemdAllErrorMessages(emd)) != NULL) {
-        copy = _fbcCopyError(allMessages);
-		fbcemdReleaseMessage(allMessages);
+	if ((allMessages = fbcemdAllErrorMessages (emd)) != NULL) {
+		copy = _fbsCopyError (allMessages);
+		fbcemdReleaseMessage (allMessages);
 	}
 
-	fbcemdRelease(emd);
+	fbcemdRelease (emd);
 
 	return copy;
 }
 
 /// Return a copy of the NULL terminated string `msg`.
 /// The caller is responsible for freeing the copy.
-static char *_fbcCopyError(const char *msg) {
-	unsigned long len = strlen(msg);
-	char *copy = (char *)malloc(len + 1);
-	memcpy(copy, msg, len);
+static char* _fbsCopyError(const char* msg) {
+	unsigned long len = strlen (msg);
+	char* copy = (char*) malloc (len + 1);
+	memcpy (copy, msg, len);
 	copy[len] = 0;
 	return copy;
 }
@@ -193,28 +193,28 @@ FBSConnection fbsConnectDatabaseAtPath (const char* databaseName,
 	char digest[1000];
 	char url[1025];
 
-	int n = snprintf(url, 1025, "file://%s", filePath);
+	int n = snprintf (url, 1025, "file://%s", filePath);
 	if (n >= 1025) {
 		if (errorMessage != NULL) {
-			*errorMessage = _fbcCopyError("path too long");
+			*errorMessage = _fbsCopyError ("path too long");
 		}
 		return NULL;
 	}
 
-	FBCMetaData *md = fbcdcConnectToURL(url, digestPassword ("_SYSTEM", databasePassword, digest), username, digestPassword (username, password, digest),defaultSessionName);
+	FBCMetaData* metadata = fbcdcConnectToURL(url, digestPassword ("_SYSTEM", databasePassword, digest), username, digestPassword (username, password, digest),defaultSessionName);
 
-	if (fbcmdErrorsFound(md)) {
+	if (fbcmdErrorsFound(metadata)) {
 		if (errorMessage != NULL) {
-			*errorMessage = _fbcCopyAllMessages(md);
+			*errorMessage = _fbsCopyAllMessages (metadata);
 		}
 
-		fbcmdRelease(md);
+		fbcmdRelease (metadata);
 		return NULL;
 	}
 
-	FBCDatabaseConnection *connection = fbcdcRetain(fbcmdDatabaseConnection(md));
-	fbcmdRelease(md);
-	md = NULL;
+	FBCDatabaseConnection* connection = fbcdcRetain (fbcmdDatabaseConnection (metadata));
+	fbcmdRelease (metadata);
+	metadata = NULL;
 
 	fbcdcSetFormatResult (connection, 0);
 
@@ -288,7 +288,7 @@ FBSResult fbsExecuteSQL (FBSConnection connection,
 
 	if (fbcmdErrorsFound (metadata)) {
 		if (errorMessage != NULL) {
-			*errorMessage = _fbcCopyAllMessages(metadata);
+			*errorMessage = _fbsCopyAllMessages (metadata);
 		}
 
 		fbcmdRelease (metadata);
