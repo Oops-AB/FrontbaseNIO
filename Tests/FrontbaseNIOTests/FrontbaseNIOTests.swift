@@ -2,6 +2,7 @@
 import NIO
 import XCTest
 import MemoryTools
+import Logging
 
 class FrontbaseNIOTests: XCTestCase {
 
@@ -371,6 +372,43 @@ class FrontbaseNIOTests: XCTestCase {
         XCTAssertEqual (bar.first!.firstValue (forColumn: "string"), FrontbaseData.text (string2))
     }
 
+    func testMultiThreadingFileBased() throws {
+        let elg = MultiThreadedEventLoopGroup (numberOfThreads: 2)
+        let threadPool = NIOThreadPool (numberOfThreads: 2)
+        let storage = FrontbaseConnection.Storage.file (name: "FrontbaseTests", pathName: try FrontbaseConnection.temporaryDirectory (template: "/tmp/FrontbaseTests-XXXXXXXXXX") + "/database.fb", username: "_system", password: "", databasePassword: "")
+        let logger = Logger (label: "FrontbaseTests")
+
+        let conn = try FrontbaseConnection.open (storage: storage, threadPool: threadPool, logger: logger, on: elg.next()).wait()
+        defer {
+            conn.destroyTest()
+        }
+
+        let group = DispatchGroup()
+        group.enter()
+        DispatchQueue.global().async {
+            let conn = try! FrontbaseConnection.open (storage: storage, threadPool: threadPool, logger: logger, on: elg.next()).wait()
+            for i in 0 ..< 100 {
+                print ("a \(i)")
+                let res = try! conn.query("VALUES (1 + 1);").wait()
+                print (res)
+            }
+            let _ = conn.close()
+            group.leave()
+        }
+        group.enter()
+        DispatchQueue.global().async {
+            let conn = try! FrontbaseConnection.open (storage: storage, threadPool: threadPool, logger: logger, on: elg.next()).wait()
+            for i in 0 ..< 100 {
+                print ("b \(i)")
+                let res = try! conn.query("VALUES (1 + 1);").wait()
+                print (res)
+            }
+            let _ = conn.close()
+            group.leave()
+        }
+        group.wait()
+    }
+
     func testAnyType() throws {
         let database = try FrontbaseConnection.makeFilebasedTest(); defer { database.destroyTest() }
         let values: [FrontbaseDataConvertible] = [
@@ -525,11 +563,9 @@ class FrontbaseNIOTests: XCTestCase {
 
     func testAllocation() throws {
         let metrics = XCTMemoryMetric()
-        let from = XCTPerformanceMeasurementTimestamp()
-        var to: XCTPerformanceMeasurementTimestamp? = nil
-
         measure (metrics: [metrics]) {
-            XCTAssertNoThrow {
+            do {
+                startMeasuring()
                 let database = try FrontbaseConnection.makeFilebasedTest();
                 let string = "Lorem ipsum set dolor mit amet"
                 let blob = Data (repeating: 42, count: 100000)
@@ -542,17 +578,45 @@ class FrontbaseNIOTests: XCTestCase {
                     if let result = try! database.query (#"SELECT COUNT (*) AS counter, MIN ("string") AS value, MIN ("blob") AS blobValue FROM "foo""#).wait().first {
                         XCTAssertEqual (result.firstValue (forColumn: "counter"), FrontbaseData.decimal (1.0))
                         XCTAssertEqual (result.firstValue (forColumn: "value"), FrontbaseData.text (string))
-                        XCTAssertEqual (result.firstValue (forColumn: "blobValue"), blob.frontbaseData)
+                        XCTAssertEqual (result.firstValue (forColumn: "blobValue")?.blobData, blob)
                     }
                 }
                 database.destroyTest()
-                to = XCTPerformanceMeasurementTimestamp()
+            } catch {
+                XCTFail("\(error)")
             }
         }
+    }
 
-        if let to {
-            let measurements = try metrics.reportMeasurements(from: from, to: to)
-            print (measurements)
+    func testErrorMessageAllocation() throws {
+        let metrics = XCTMemoryMetric()
+
+        var sql = "SELECT * FROM foo;"
+        for _ in 1...100 {
+            sql.append("\nSELECT * FROM foo;")
+        }
+        sql.append("\nSELECT * FRIM foo;")
+
+        measure (metrics: [metrics]) {
+            do {
+                startMeasuring()
+                let database = try FrontbaseConnection.makeFilebasedTest();
+                _ = try database.query ("CREATE TABLE foo (\"string\" CHARACTER (100))").wait()
+                _ = try database.query ("COMMIT;").wait()
+
+                for _ in 1...10000 {
+                    do {
+                        let _ = try database.query(sql).wait()
+                    } catch {
+                        continue
+                    }
+
+                    XCTFail("expected DB query error")
+                }
+                database.destroyTest()
+            } catch {
+                XCTFail("\(error)")
+            }
         }
     }
 }

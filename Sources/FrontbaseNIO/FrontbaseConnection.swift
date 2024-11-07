@@ -90,62 +90,56 @@ public final class FrontbaseConnection {
     ) -> EventLoopFuture<FrontbaseConnection> {
         let promise = eventLoop.makePromise(of: FrontbaseConnection.self)
         threadPool.submit { state in
-            var errorMessage: UnsafePointer<Int8>? = nil
+            var errorMessage: UnsafeMutablePointer<Int8>? = nil
             var connection: FBSConnection? = nil
             var sessionMode: SessionMode = .serializable (.pessimistic, .readOnly)
             let systemUser = ProcessInfo.processInfo.environment["USER"] ?? ""
 
             switch storage {
             case .named (let databaseName, let hostName, let username, let password, let databasePassword, let mode):
-                connection = withUnsafeMutablePointer (to: &errorMessage) { (errorMessagePointer: UnsafeMutablePointer<UnsafePointer<Int8>?>) -> FBSConnection? in
                     sessionMode = mode
-                    return fbsConnectDatabaseOnHost (databaseName,
+                    connection = fbsConnectDatabaseOnHost (databaseName,
                                                      hostName,
                                                      databasePassword,
                                                      username.uppercased(),
                                                      password,
                                                      sessionName,
                                                      systemUser,
-                                                     errorMessagePointer)
-                }
+                                                     &errorMessage)
 
             case .port (let hostName, let port, let username, let password, let databasePassword, let mode):
-                connection = withUnsafeMutablePointer (to: &errorMessage) { (errorMessagePointer: UnsafeMutablePointer<UnsafePointer<Int8>?>) -> FBSConnection? in
                     sessionMode = mode
-                    return fbsConnectDatabaseOnPort (hostName,
+                    connection = fbsConnectDatabaseOnPort (hostName,
                                                      port,
                                                      databasePassword,
                                                      username.uppercased(),
                                                      password,
                                                      sessionName,
                                                      systemUser,
-                                                     errorMessagePointer)
-                }
+                                                     &errorMessage)
 
             case .file (let databaseName, let filePath, let username, let password, let databasePassword, let mode):
-                connection = withUnsafeMutablePointer (to: &errorMessage) { (errorMessagePointer: UnsafeMutablePointer<UnsafePointer<Int8>?>) -> FBSConnection? in
                     sessionMode = mode
-                    return fbsConnectDatabaseAtPath (databaseName,
+                    connection = fbsConnectDatabaseAtPath (databaseName,
                                                      filePath,
                                                      databasePassword,
                                                      username.uppercased(),
                                                      password,
                                                      sessionName,
                                                      systemUser,
-                                                     errorMessagePointer)
-                }
+                                                     &errorMessage)
             }
 
             if connection == nil, let message = errorMessage {
-                logger.error ("Failed to connect to Frontbase database: \(storage) (\(String (cString: message)))")
-                promise.fail (FrontbaseError (reason: .error, message: "Could not open database: \(storage) (\(String (cString: message)))"))
+                defer { free(message); errorMessage = nil }
+                let messageAsString = String (cString: message)
+                logger.error ("Failed to connect to Frontbase database: \(storage) (\(messageAsString))")
+                promise.fail (FrontbaseError (reason: .error, message: "Could not open database: \(storage) (\(messageAsString))"))
             } else if connection == nil {
                 logger.error ("Failed to connect to Frontbase database: \(storage)")
                 promise.fail (FrontbaseError (reason: .error, message: "Could not open database: \(storage)"))
             } else {
-                let result = withUnsafeMutablePointer (to: &errorMessage) { (errorMessagePointer: UnsafeMutablePointer<UnsafePointer<Int8>?>) -> FBSResult? in
-                    return fbsExecuteSQL (connection!, sessionMode.sql, true, errorMessagePointer)
-                }
+                let result = fbsExecuteSQL (connection!, sessionMode.sql, true, &errorMessage)
                 defer {
                     if let result {
                         fbsCloseResult (result)
@@ -153,6 +147,7 @@ public final class FrontbaseConnection {
                 }
 
                 if let message = errorMessage {
+                    defer { free(message); errorMessage = nil }
                     logger.error ("Failed to set transaction isolation level on new connection to Frontbase database: \(storage)")
                     promise.fail (FrontbaseError (reason: .error, message: "Could set transaction isolation level on new connection (\(message))."))
                 } else {

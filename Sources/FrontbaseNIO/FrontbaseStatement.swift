@@ -1,4 +1,5 @@
 import CFrontbaseSupport
+import Foundation
 
 internal class FrontbaseStatement {
     internal let connection: FrontbaseConnection
@@ -113,12 +114,11 @@ internal class FrontbaseStatement {
         guard connection.databaseConnection != nil else {
             throw FrontbaseError (reason: .error, message: "Connection has been closed")
         }
-        var errorMessage: UnsafePointer<Int8>? = nil
-        let resultSet: FBSResult? = withUnsafeMutablePointer (to: &errorMessage) { errorMessagePointer in
-            return fbsExecuteSQL (connection.databaseConnection!, sql + ";", connection.autoCommit, errorMessagePointer)
-        }
+        var errorMessage: UnsafeMutablePointer<Int8>? = nil
+        let resultSet: FBSResult? = fbsExecuteSQL (connection.databaseConnection!, sql + ";", connection.autoCommit, &errorMessage)
 
         if let message = errorMessage {
+            defer { free(message); errorMessage = nil }
             throw FrontbaseError (reason: .error, message: String (cString: message))
         }
 
