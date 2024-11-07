@@ -4,47 +4,9 @@
 #include <stdlib.h> // for malloc()
 
 // Internal
-static char *_fbsCopyAllMessages (FBCMetaData*);
-static char *_fbsCopyError(const char *);
-
-const char* digestPassword (const char* username, const char* password, char* digest) {
-	if (password == NULL) {
-		return NULL;
-	} else {
-		return fbcDigestPassword (username, password, digest);
-	}
-}
-
-/// Return a copy of all error messages associated with `metadata`, or `NULL` if there are none.
-/// The caller must free the returned string.
-/// The rationale for this function is this note from the meastro:
-///   "You should always use fbcemdReleaseMessage on the result from fbcemdAllErrorMessages"
-static char *_fbsCopyAllMessages (FBCMetaData* metadata) {
-	if (!fbcmdErrorsFound (metadata)) return NULL;
-
-	FBCErrorMetaData* emd = fbcmdErrorMetaData (metadata);
-	char* allMessages = NULL;
-	char* copy = NULL;
-
-	if ((allMessages = fbcemdAllErrorMessages (emd)) != NULL) {
-		copy = _fbsCopyError (allMessages);
-		fbcemdReleaseMessage (allMessages);
-	}
-
-	fbcemdRelease (emd);
-
-	return copy;
-}
-
-/// Return a copy of the NULL terminated string `msg`.
-/// The caller is responsible for freeing the copy.
-static char* _fbsCopyError(const char* msg) {
-	unsigned long len = strlen (msg);
-	char* copy = (char*) malloc (len + 1);
-	memcpy (copy, msg, len);
-	copy[len] = 0;
-	return copy;
-}
+static char* _fbsCopyAllMessages (FBCMetaData* metadata);
+static char* _fbsCopyError(const char* message);
+static const char* _fbsDigestPassword (const char* username, const char* password, char* digest);
 
 /// Open a connection through FBExec on a host, and create a session.
 /// Any returned FBSConnection MUST be deallocated using fbsClose().
@@ -59,7 +21,7 @@ FBSConnection fbsConnectDatabaseOnHost (const char* databaseName,
 										const char** errorMessage) {
 	const char* localError = NULL;
 	char digest[1000];
-	FBCDatabaseConnection* connection = fbcdcConnectToDatabaseRM (databaseName, hostName, digestPassword ("_SYSTEM", databasePassword, digest), &localError);
+	FBCDatabaseConnection* connection = fbcdcConnectToDatabaseRM (databaseName, hostName, _fbsDigestPassword ("_SYSTEM", databasePassword, digest), &localError);
 	FBCMetaData* session;
 	FBCErrorMetaData* errorMetaData;
 
@@ -70,7 +32,7 @@ FBSConnection fbsConnectDatabaseOnHost (const char* databaseName,
 		return NULL;
 	}
 
-	session = fbcdcCreateSession (connection, defaultSessionName, username, digestPassword (username, password, digest), operatingSystemUser);
+	session = fbcdcCreateSession (connection, defaultSessionName, username, _fbsDigestPassword (username, password, digest), operatingSystemUser);
 
 	if (session == NULL) {
 		fbcdcClose (connection);
@@ -125,7 +87,7 @@ FBSConnection fbsConnectDatabaseOnPort (const char* hostName,
 										const char** errorMessage) {
 	const char* localError = NULL;
 	char digest[1000];
-	FBCDatabaseConnection* connection = fbcdcConnectToDatabaseUsingPortRM (hostName, port, digestPassword ("_SYSTEM", databasePassword, digest), &localError);
+	FBCDatabaseConnection* connection = fbcdcConnectToDatabaseUsingPortRM (hostName, port, _fbsDigestPassword ("_SYSTEM", databasePassword, digest), &localError);
 	FBCMetaData* session;
 	FBCErrorMetaData* errorMetaData;
 
@@ -136,7 +98,7 @@ FBSConnection fbsConnectDatabaseOnPort (const char* hostName,
 		return NULL;
 	}
 
-	session = fbcdcCreateSession (connection, defaultSessionName, username, digestPassword (username, password, digest), operatingSystemUser);
+	session = fbcdcCreateSession (connection, defaultSessionName, username, _fbsDigestPassword (username, password, digest), operatingSystemUser);
 
 	if (session == NULL) {
 		fbcdcClose (connection);
@@ -201,7 +163,7 @@ FBSConnection fbsConnectDatabaseAtPath (const char* databaseName,
 		return NULL;
 	}
 
-	FBCMetaData* metadata = fbcdcConnectToURL(url, digestPassword ("_SYSTEM", databasePassword, digest), username, digestPassword (username, password, digest),defaultSessionName);
+	FBCMetaData* metadata = fbcdcConnectToURL(url, _fbsDigestPassword ("_SYSTEM", databasePassword, digest), username, _fbsDigestPassword (username, password, digest),defaultSessionName);
 
 	if (fbcmdErrorsFound(metadata)) {
 		if (errorMessage != NULL) {
@@ -729,5 +691,46 @@ const char* fbsFetchMessage (FBSResult result) {
 		return NULL;
 	} else {
 		return row;
+	}
+}
+
+// MARK: Internal
+
+/// Return a copy of all error messages associated with `metadata`, or `NULL` if there are none.
+/// The caller must free the returned string.
+/// The rationale for this function is this note from the meastro:
+///   "You should always use fbcemdReleaseMessage on the result from fbcemdAllErrorMessages"
+static char *_fbsCopyAllMessages (FBCMetaData* metadata) {
+	if (!fbcmdErrorsFound (metadata)) return NULL;
+
+	FBCErrorMetaData* emd = fbcmdErrorMetaData (metadata);
+	char* allMessages = NULL;
+	char* copy = NULL;
+
+	if ((allMessages = fbcemdAllErrorMessages (emd)) != NULL) {
+		copy = _fbsCopyError (allMessages);
+		fbcemdReleaseMessage (allMessages);
+	}
+
+	fbcemdRelease (emd);
+
+	return copy;
+}
+
+/// Return a copy of the NULL terminated string `message`.
+/// The caller is responsible for freeing the copy.
+static char* _fbsCopyError(const char* message) {
+	unsigned long len = strlen (message);
+	char* copy = (char*) malloc (len + 1);
+	memcpy (copy, message, len);
+	copy[len] = 0;
+	return copy;
+}
+
+static const char* _fbsDigestPassword (const char* username, const char* password, char* digest) {
+	if (password == NULL) {
+		return NULL;
+	} else {
+		return fbcDigestPassword (username, password, digest);
 	}
 }
