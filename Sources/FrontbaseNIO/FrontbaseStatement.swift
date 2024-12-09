@@ -111,7 +111,7 @@ internal class FrontbaseStatement {
         guard let sql = self.sql else {
             throw ParseError.noStatement
         }
-        guard connection.databaseConnection != nil else {
+        guard let databaseConnection = connection.databaseConnection, fbsConnectionIsOpen (databaseConnection) else {
             throw FrontbaseError (reason: .error, message: "Connection has been closed")
         }
         var errorMessage: UnsafeMutablePointer<Int8>? = nil

@@ -79,7 +79,11 @@ public final class FrontbaseConnection {
     public var autoCommit = true
 
     public var isClosed: Bool {
-        return databaseConnection == nil
+        if let databaseConnection, fbsConnectionIsOpen (databaseConnection) {
+            return false
+        } else {
+            return true
+        }
     }
 
     public static func open (storage: Storage,
@@ -231,7 +235,7 @@ public final class FrontbaseConnection {
                 try statement.executeQuery()
                 var callbacks: [EventLoopFuture<Void>] = []
 
-                guard self.databaseConnection != nil else {
+                guard let connection = self.databaseConnection, fbsConnectionIsOpen (connection) else {
                     return promise.fail (FrontbaseError (reason: .error, message: "Connection has closed"))
                 }
                 while let row = try statement.nextRow() {
@@ -342,6 +346,9 @@ public final class FrontbaseConnection {
 #endif
 
     deinit {
+        guard let databaseConnection, fbsConnectionIsOpen (databaseConnection) else {
+            return
+        }
         assert (self.databaseConnection == nil, "FrontbaseConnection was not closed before deinitializing")
     }
 }
