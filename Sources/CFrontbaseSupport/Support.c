@@ -149,7 +149,7 @@ FBSConnection fbsConnectDatabaseAtPath (const char* databaseName,
 	char digest[1000];
 	char url[1025];
 
-	int n = snprintf (url, 1025, "file://%s", filePath);
+	int n = snprintf (url, 1025, "file:///%s", filePath);
 	if (n >= 1025) {
 		if (errorMessage != NULL) {
 			*errorMessage = _fbsCopyError ("path too long");
