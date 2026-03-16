@@ -112,7 +112,8 @@ const char* fbsErrorMessage (FBSConnection connection);
 FBSResult _Nullable fbsExecuteSQL (FBSConnection connection,
                                    const char* sql,
                                    bool autoCommit,
-                                   char* _Nullable * _Nullable errorMessage);
+                                   char* _Nullable * _Nullable errorMessage,
+                                   double* _Nullable elapsed);
 
 /// Close result set, and deallocate data structures.
 void fbsCloseResult (FBSResult result);

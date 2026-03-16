@@ -115,12 +115,15 @@ internal class FrontbaseStatement {
             throw FrontbaseError (reason: .error, message: "Connection has been closed")
         }
         var errorMessage: UnsafeMutablePointer<Int8>? = nil
-        let resultSet: FBSResult? = fbsExecuteSQL (connection.databaseConnection!, sql + ";", connection.autoCommit, &errorMessage)
+        var elapsed: Double = .nan
+        let resultSet: FBSResult? = fbsExecuteSQL (connection.databaseConnection!, sql + ";", connection.autoCommit, &errorMessage, &elapsed)
 
         if let message = errorMessage {
             defer { free(message); errorMessage = nil }
             throw FrontbaseError (reason: .error, message: String (cString: message))
         }
+
+        connection.metricsHandler.collectMetrics(statement: sql, duration: elapsed)
 
         self.resultSet = resultSet
     }

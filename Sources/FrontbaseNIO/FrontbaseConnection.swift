@@ -86,6 +86,8 @@ public final class FrontbaseConnection {
         }
     }
 
+    public var metricsHandler: FrontbaseMetricsHandler
+
     public static func open (storage: Storage,
                              sessionName: String = ProcessInfo.processInfo.processName,
                              threadPool: NIOThreadPool,
@@ -143,7 +145,7 @@ public final class FrontbaseConnection {
                 logger.error ("Failed to connect to Frontbase database: \(storage)")
                 promise.fail (FrontbaseError (reason: .error, message: "Could not open database: \(storage)"))
             } else {
-                let result = fbsExecuteSQL (connection!, sessionMode.sql, true, &errorMessage)
+                let result = fbsExecuteSQL (connection!, sessionMode.sql, true, &errorMessage, nil)
                 defer {
                     if let result {
                         fbsCloseResult (result)
@@ -184,6 +186,7 @@ public final class FrontbaseConnection {
         self.eventLoop = eventLoop
         self.blockingIO = NIOThreadPool (numberOfThreads: 1)
         self.blockingIO.start()
+        self.metricsHandler = NoopFrontbaseMetricsHandler()
     }
 
     /// Returns the last error message, if one exists.
