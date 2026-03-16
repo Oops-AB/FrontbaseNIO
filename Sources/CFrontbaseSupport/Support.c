@@ -53,7 +53,7 @@ FBSConnection fbsConnectDatabaseOnHost (const char* databaseName,
 
         char* timeZoneMessage = NULL;
 
-        FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage);
+        FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage, NULL);
 
         if (result == NULL) {
             if (errorMessage != NULL) {
@@ -116,7 +116,7 @@ FBSConnection fbsConnectDatabaseOnPort (const char* hostName,
 
         char* timeZoneMessage = NULL;
 
-        FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage);
+        FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage, NULL);
 
         if (result == NULL) {
             if (errorMessage != NULL) {
@@ -176,7 +176,7 @@ FBSConnection fbsConnectDatabaseAtPath (const char* databaseName,
 
 	char* timeZoneMessage = NULL;
 
-	FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage);
+	FBSResult result = fbsExecuteSQL (connection, "SET TIME ZONE 'UTC';", 1, &timeZoneMessage, NULL);
 
 	if (result == NULL) {
 		if (errorMessage != NULL) {
@@ -238,7 +238,8 @@ const char* fbsErrorMessage (FBSConnection connection) {
 FBSResult fbsExecuteSQL (FBSConnection connection,
                          const char* sql,
                          bool autoCommit,
-                         char** errorMessage) {
+                         char** errorMessage,
+                         double* elapsed) {
 	FBCDatabaseConnection* databaseConnection = connection;
     FBCMetaData* metadata = fbcdcExecuteSQL (databaseConnection, (char*)sql, (unsigned int)strlen (sql), autoCommit ? FBCDCCommit : 0);
 
@@ -251,6 +252,9 @@ FBSResult fbsExecuteSQL (FBSConnection connection,
 
 		return NULL;
 	} else {
+        if (elapsed != NULL) {
+            *elapsed = fbcmdElapsed (metadata);
+        }
 		return metadata;
 	}
 }
