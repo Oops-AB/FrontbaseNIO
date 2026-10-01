@@ -252,7 +252,7 @@ internal class FrontbaseStatement {
                     throw FrontbaseError (reason: .error, message: "Unexpected column type.")
 
                 case FBS_AnyType:
-                    throw FrontbaseError (reason: .error, message: "Unexpected column type.")
+                    datatype = .anytype
 
                 default:
                     throw FrontbaseError (reason: .error, message: "Unexpected column type.")
