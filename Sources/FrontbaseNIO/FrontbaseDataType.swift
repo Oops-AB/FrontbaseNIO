@@ -28,6 +28,9 @@ public enum FrontbaseDataType {
     /// `BIT VARYING`.
     case varyingbits
 
+    /// `ANY TYPE`
+    case anytype
+
     /// `NULL`.
     case null
 }
